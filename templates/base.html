@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8'>
+    <meta name=author content="Emma Shumadine">
+    <title>Label Fresh | {{title}}</title>
+    <link rel="stylesheet"
+          href="{{url_for('static',filename='style.css')}}"
+          type="text/css">
+</head>
+<body>
+<div class="navbar">
+    <ul>
+        <li>Home</li>
+        <li>Calendar</li>
+        <li id="Search">Search</li>
+        <li>Report a Label</li>
+        <li>Login</li>
+    </ul>
+</div>
+
+{% block content %}
+
+<h1>{{title}}</h1>
+
+<p>
+    <a href="http://www.wellesleyfresh.com/index.html">
+        Wellesley Fresh
+    </a> 
+    is really, really bad at labeling the food it 
+    serves. Labels are often missing, confusing, or incorrect. 
+    As someone with celiac disease, an autoimmune disorder which 
+    requires me to eat a gluten-free diet, I often have to decide 
+    whether I want to trust the labels at the dining halls or 
+    take the chance of getting sick, and the inconsistencies of 
+    the online menu mean that I can’t tell if a dining hall will 
+    have food for me before I get there. Label Fresh allows the 
+    community to report labelling errors as they are encountered, 
+    giving people with dietary restrictions more information
+    with which to base their decisions of where to eat on.
+</p>
+
+<p>Image here as example maybe?</p>
+
+<h2>How It Works</h2>
+<ul>
+    <li>
+        Click on <a href="">Calendar</a> to see a calendar view 
+        of all of the reports submitted so far.
+    </li>
+    <li>
+        Click on <a href="">Report a Label</a> to report an 
+        incorrect or missing label.
+    </li>
+    <li>
+        Click <a href="">Search</a> to find all reports about a 
+        food's label at a specific dining hall or across all 
+        dining halls.
+    </li>
+</ul>
+
+<p>
+    Anyone can add or edit reports, but only the creator (logged 
+    in through the Wellesley login) can delete their own reports.
+</p>
+<p>
+    There is currently no integration with the 
+    <a href="http://www.wellesleyfresh.com/culinary-centers.html">
+        online menu
+    </a> 
+    for the dining halls.
+</p>
+
+{% endblock %}
+
+<footer>
+    <ul id="iconlist">       
+        <li>
+            <a href="https://jigsaw.w3.org/css-validator/check/referer"><img 
+               style="border:0;width:88px;height:31px"
+               src="https://cs.wellesley.edu/~cs304/Icons/vcss.gif"
+               alt="Valid CSS!"></a>
+        </li>   
+        <li>
+            <a href="https://validator.w3.org/check?uri=referer"><img 
+               src="https://cs.wellesley.edu/~cs304/Icons/valid-html5v2.png"
+               alt="Valid HTML5"
+               title="Valid HTML5"
+               id="valid-html"></a> 
+        </li>      
+    </ul>
+</footer>
+
+</body>
+</html>
