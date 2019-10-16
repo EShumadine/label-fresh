@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>{{title}}</h1>
+
+<form method="POST" action="">
+    <p><label>Date: 
+        <input type="date" name="date" required>
+    </label></p>
+    <p><label>Food name: 
+        <input name="name" required>
+    </label></p>
+    <fieldset><legend>Allergens</legend>
+        <p><label>Listed Allergens: <br>
+            <input required type="checkbox" name="listed-allergens" value="W">
+            Wheat
+            <input required type="checkbox" name="listed-allergens" value="M">
+            Milk
+            <input required type="checkbox" name="listed-allergens" value="E">
+            Eggs
+            <input required type="checkbox" name="listed-allergens" value="S">
+            Soy
+            <input required type="checkbox" name="listed-allergens" value="P">
+            Peanuts
+            <input required type="checkbox" name="listed-allergens" value="TN">
+            Tree Nuts
+            <input required type="checkbox" name="listed-allergens" value="F">
+            Fish
+            <input required type="checkbox" name="listed-allergens" value="SF">
+            Shellfish
+            <input required type="checkbox" name="listed-allergens">
+            None
+        </label></p>
+        <p><label>Allergens Present: <br>
+            <input required type="checkbox" name="present-allergens" value="W">
+            Wheat
+            <input required type="checkbox" name="present-allergens" value="M">
+            Milk
+            <input required type="checkbox" name="present-allergens" value="E">
+            Eggs
+            <input required type="checkbox" name="present-allergens" value="S">
+            Soy
+            <input required type="checkbox" name="present-allergens" value="P">
+            Peanuts
+            <input required type="checkbox" name="present-allergens" value="TN">
+            Tree Nuts
+            <input required type="checkbox" name="present-allergens" value="F">
+            Fish
+            <input required type="checkbox" name="present-allergens" value="SF">
+            Shellfish
+            <input required type="checkbox" name="present-allergens">
+            None
+            <input required type="checkbox" name="present-allergens">
+            Unknown
+        </label></p>
+    </fieldset>
+    <fieldset><legend>Diets</legend>
+        <p><label>Listed Diets: <br>
+            <input required type="checkbox" name="listed-diets" value="VE">
+            Vegan
+            <input required type="checkbox" name="listed-diets" value="V">
+            Vegetarian
+            <input required type="checkbox" name="listed-diets" value="GS">
+            Gluten Sensitive
+            <input required type="checkbox" name="listed-diets" value="H">
+            Halal
+            <input required type="checkbox" name="listed-diets">
+            None
+        </label></p>
+        <p><label>Diets Followed: <br>
+            <input required type="checkbox" name="followed-diets" value="VE">
+            Vegan
+            <input required type="checkbox" name="followed-diets" value="V">
+            Vegetarian
+            <input required type="checkbox" name="followed-diets" value="GS">
+            Gluten Sensitive
+            <input required type="checkbox" name="followed-diets" value="H">
+            Halal
+            <input required type="checkbox" name="followed-diets">
+            None
+            <input required type="checkbox" name="followed-diets">
+            Unknown
+        </label></p>
+    </fieldset>
+    <p><label>
+        Upload a picture <input type="image" name="image">
+    </label></p>
+    <p><label>
+        Notes <br>
+        <textarea name="notes" rows=3 cols=30></textarea>
+    </label></p>
+    <p><input type="submit" value="Submit"></p>
+</form>
+
+<p class="legend">Allergen legend</p>
+<p class="legend">Diet legend</p>
+
+{% endblock %}
