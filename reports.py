@@ -24,8 +24,7 @@ def insertRelations(conn, infoDict, reportID, kind):
     for key in iter(infoDict):
         for entry in infoDict[key]:
             curs.execute('''
-                INSERT INTO ''' + kind + '''(id,code,kind)
-                VALUES(%s, %s, %s)
+                INSERT INTO label(id,code,labeled,kind)
+                VALUES(%s, %s, %s, %s)
                 ''', \
-                [reportID, entry, key])
-    
+                [reportID, entry, key, kind])

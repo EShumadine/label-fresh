@@ -33,11 +33,11 @@ def new_report():
 
         allergenResults = {}
         allergenResults['listed'] = request.form.getlist('listed-allergens')
-        allergenResults['present'] = request.form.getlist('present-allergens')
+        allergenResults['actual'] = request.form.getlist('present-allergens')
 
         dietResults = {}
         dietResults['listed'] = request.form.getlist('listed-diets')
-        dietResults['followed'] = request.form.getlist('followed-diets')
+        dietResults['actual'] = request.form.getlist('followed-diets')
 
         # insert and redirect
         conn = reports.getConn("eshumadi_db")
@@ -47,8 +47,10 @@ def new_report():
             reports.insertRelations(conn, dietResults, reportID, 'diet')
             return render_template('new_report.html', title='Submitted')
         except Exception as err:
-            flash('form submission error '+str(err))
-            return redirect( url_for('homepage') )
+            flash('form submission error: '+str(err))
+            return redirect(url_for('new_report'))
+    else:
+        return render_template('new_report.html', title='Make a Report')
 
 if __name__ == '__main__':
     import os

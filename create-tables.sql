@@ -1,5 +1,4 @@
-DROP TABLE IF EXISTS allergen;
-DROP TABLE IF EXISTS diet;
+DROP TABLE IF EXISTS label;
 DROP TABLE IF EXISTS report;
 
 CREATE TABLE report (
@@ -16,22 +15,12 @@ CREATE TABLE report (
 	INDEX (id)
 ) ENGINE = InnoDB;
 
-CREATE TABLE allergen (
+CREATE TABLE label (
 	id int NOT NULL,
-	code enum('W', 'M', 'E', 'S', 'P', 'TN', 'F', 'SF', 'None', 'Unknown') NOT NULL,
-    kind enum('listed', 'present') NOT NULL,
-	PRIMARY KEY (id, code, kind),
-	INDEX (id),
-	FOREIGN KEY (id) REFERENCES report(id)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
-) ENGINE = InnoDB;
-
-CREATE TABLE diet (
-	id int NOT NULL,
-	code enum('VE', 'V', 'GS', 'H', 'None', 'Unknown') NOT NULL,
-    kind enum('listed', 'followed'),
-	PRIMARY KEY (id, code, kind),
+	code enum('W', 'M', 'E', 'S', 'P', 'TN', 'F', 'SF', 'VE', 'V', 'GS', 'H', 'None', 'Unknown') NOT NULL,
+    labeled enum('listed', 'actual') NOT NULL,
+	kind enum('allergen', 'diet') NOT NULL,
+	PRIMARY KEY (id, code, labeled, kind),
 	INDEX (id),
 	FOREIGN KEY (id) REFERENCES report(id)
 		ON DELETE CASCADE
