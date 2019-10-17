@@ -10,7 +10,7 @@ CREATE TABLE report (
 	notes varchar(300),
 	image varchar(30),
 	owner varchar(8),
-	INDEX (name, served, hall)
+	INDEX (name, hall)
 ) ENGINE = InnoDB;
 
 CREATE TABLE allergen (

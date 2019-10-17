@@ -15,4 +15,5 @@ def insertReport(conn, infoDict):
     ''', \
     [infoDict['name'], infoDict['served'], infoDict['hall'], \
     infoDict['image'], infoDict['notes'], infoDict['owner']])
-    return curs.fetchone()
+
+
