@@ -6,10 +6,21 @@
 
 <form method="POST" action="">
     <p><label>Date: 
-        <input type="date" name="date" required>
+        <input type="date" name="served" required>
     </label></p>
     <p><label>Food name: 
         <input name="name" required>
+    </label></p>
+    <p><label>
+        Dining Hall:
+        <select name="hall" required>
+            <option value="">select</option>
+            <option value="Bae Pow Lu Chow">Bae Pow Lu Chow (Lulu)</option>
+            <option>Tower</option>
+            <option>Bates</option>
+            <option>Stone Davis</option>
+            <option>Pomeroy</option>
+        </select>
     </label></p>
     <fieldset><legend>Allergens</legend>
         <p><label>Listed Allergens: <br>

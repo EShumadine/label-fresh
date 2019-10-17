@@ -9,7 +9,8 @@ CREATE TABLE report (
 	hall enum('Bates', 'Tower', 'Stone Davis', 'Pomeroy', 'Bae Pow Lu Chow') NOT NULL,
 	notes varchar(300),
 	image varchar(30),
-	owner varchar(8)
+	owner varchar(8),
+	INDEX (name, served, hall)
 ) ENGINE = InnoDB;
 
 CREATE TABLE allergen (

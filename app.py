@@ -18,8 +18,14 @@ def new_report():
     if request.method == 'GET':
         return render_template('new_report.html', title='Make a Report')
     elif request.method == 'POST':
+        results = request.form.to_dict()
+        if results['notes'] == '':
+            results['notes'] = 'NULL'
+        if results['image'] == '':
+            results['image'] = 'NULL'
+        results['owner'] = 'NULL'
         # insert and redirect
-        return render_template('new_report.html', title=request.form)
+        return render_template('new_report.html', title=results)
 
 if __name__ == '__main__':
     import os
