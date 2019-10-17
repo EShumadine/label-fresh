@@ -1,5 +1,5 @@
 from flask import (Flask, url_for, render_template, request,
-                    redirect)
+                    redirect, flash)
 import random
 import reports
 
@@ -22,8 +22,8 @@ def new_report():
     if request.method == 'GET':
         return render_template('new_report.html', title='Make a Report')
     elif request.method == 'POST':
-        reportesults = {}
-        for key in ['name', 'served', 'hall', 'image', 'notes', 'owner']:
+        reportResults = {}
+        for key in ['name', 'meal', 'served', 'hall', 'image', 'notes']:
             reportResults[key] = request.form[key]
         if reportResults['notes'] == '':
             reportResults['notes'] = 'NULL'
@@ -40,8 +40,15 @@ def new_report():
         dietResults['followed'] = request.form.getlist('followed-diets')
 
         # insert and redirect
-        #reports.insertReport(reports.getConn('eshumadi_db'), reportResults)
-        return render_template('new_report.html', title=Submitted)
+        conn = reports.getConn("eshumadi_db")
+        try:
+            reportID = reports.insertReport(conn, reportResults)
+            reports.insertRelations(conn, allergenResults, reportID, 'allergen')
+            reports.insertRelations(conn, dietResults, reportID, 'diet')
+            return render_template('new_report.html', title='Submitted')
+        except Exception as err:
+            flash('form submission error '+str(err))
+            return redirect( url_for('homepage') )
 
 if __name__ == '__main__':
     import os

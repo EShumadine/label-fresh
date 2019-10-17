@@ -8,12 +8,24 @@ def getConn(db):
     return conn
 
 def insertReport(conn, infoDict):
-    curs = dbi.dictCursor(conn)
+    curs = dbi.cursor(conn)
     curs.execute('''
-    INSERT INTO report(name,served,hall,image,notes,owner)
-    VALUES(%s, %s, %s, %s, %s, %s)
-    ''', \
-    [infoDict['name'], infoDict['served'], infoDict['hall'], \
-    infoDict['image'], infoDict['notes'], infoDict['owner']])
+        INSERT INTO report(name,meal,served,hall,image,notes,owner)
+        VALUES(%s, %s, %s, %s, %s, %s, %s)
+        ''', \
+        [infoDict['name'], infoDict['meal'], infoDict['served'], \
+        infoDict['hall'], infoDict['image'], infoDict['notes'], \
+        infoDict['owner']])
+    curs.execute('SELECT LAST_INSERT_ID()')
+    return curs.fetchone()[0]
 
-
+def insertRelations(conn, infoDict, reportID, kind):
+    curs = dbi.cursor(conn)
+    for key in iter(infoDict):
+        for entry in infoDict[key]:
+            curs.execute('''
+                INSERT INTO ''' + kind + '''(id,code,kind)
+                VALUES(%s, %s, %s)
+                ''', \
+                [reportID, entry, key])
+    
