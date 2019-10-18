@@ -46,10 +46,25 @@ def getLabels(conn, reportID):
                 ''', [reportID])
     return curs.fetchall()
 
-def buildInfoDict(conn, reportID):
-    reportDict = reports.getReport(conn,reportID)
+def searchReports(conn, name, hall):
+    curs = dbi.dictCursor(conn)
+    if hall != "All Dining Halls":
+        curs.execute('''
+                    SELECT id,name,served,meal,hall FROM report
+                    WHERE report.name like %s
+                    AND report.hall = %s''', \
+                    ["%" + name + "%", hall])
+    else:
+        curs.execute('''
+                    SELECT id,name,served,meal,hall FROM report
+                    WHERE report.name like %s''', \
+                    ["%" + name + "%"])
+    return curs.fetchall()
 
-    labels = reports.getLabels(conn, reportID)
+def buildInfoDict(conn, reportID):
+    reportDict = getReport(conn,reportID)
+
+    labels = getLabels(conn, reportID)
     reportDict['listedAllergens'] = []
     reportDict['actualAllergens'] = []
     reportDict['listedDiets'] = []

@@ -62,8 +62,13 @@ def view_report(reportID):
 
 @app.route('/search/')
 def search():
-    print(request.args)
-    
+    conn = reports.getConn("eshumadi_db")
+    results = reports.searchReports(conn, request.args.get('query'), request.args.get('hall'))
+    return render_template('search.html', title="Search", \
+                                          query=request.args.get('query'), \
+                                          hall=request.args.get('hall'), \
+                                          numResults=len(results), \
+                                          results=results)
 
 if __name__ == '__main__':
     import os
