@@ -28,3 +28,42 @@ def insertRelations(conn, infoDict, reportID, kind):
                 VALUES(%s, %s, %s, %s)
                 ''', \
                 [reportID, entry, key, kind])
+
+def getReport(conn, reportID):
+    curs = dbi.dictCursor(conn)
+    curs.execute('''
+                SELECT * FROM report 
+                WHERE report.id = %s
+                ''', [reportID])
+    return curs.fetchone() # ids are unique
+
+def getLabels(conn, reportID):
+    curs = dbi.dictCursor(conn)
+    curs.execute('''
+                SELECT code,kind,labeled FROM report 
+                INNER JOIN label ON (report.id)
+                WHERE report.id = %s
+                ''', [reportID])
+    return curs.fetchall()
+
+def buildInfoDict(conn, reportID):
+    reportDict = reports.getReport(conn,reportID)
+
+    labels = reports.getLabels(conn, reportID)
+    reportDict['listedAllergens'] = []
+    reportDict['actualAllergens'] = []
+    reportDict['listedDiets'] = []
+    reportDict['actualDiets'] = []
+    for label in labels:
+        if label['labeled'] == 'listed':
+            if label['kind'] == 'allergen':
+                reportDict['listedAllergens'].append(label['code'])
+            else: # diet
+                reportDict['listedDiets'].append(label['code'])
+        else: # actual
+            if label['kind'] == 'allergen':
+                reportDict['actualAllergens'].append(label['code'])
+            else: # diet
+                reportDict['actualDiets'].append(label['code'])
+    
+    return reportDict

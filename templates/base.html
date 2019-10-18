@@ -13,7 +13,26 @@
     <ul>
         <li><a href="{{ url_for('homepage') }}">Home</a></li>
         <li><a href="">Calendar</a></li>
-        <li id="Search">Search</li>
+        <li id="Search">
+            <form method="GET" action="{{url_for('search')}}">
+                <label>
+                    Search: <input type="text" name="query" required>
+                </label>
+                <label>
+                    Dining Hall: 
+                    <select name="hall" required>
+                        <option value="">select</option>
+                        <option>All</option>
+                        <option value="Bae Pow Lu Chow">Bae Pow Lu Chow (Lulu)</option>
+                        <option>Tower</option>
+                        <option>Bates</option>
+                        <option>Stone Davis</option>
+                        <option>Pomeroy</option>
+                    </select>
+                </label>
+                <input type="submit" value="search">
+            </form>
+        </li>
         <li><a href="{{ url_for('new_report') }}">Report a Label</a></li>
         <li><a href="">Login</a></li>
     </ul>

@@ -25,10 +25,6 @@ def new_report():
         reportResults = {}
         for key in ['name', 'meal', 'served', 'hall', 'image', 'notes']:
             reportResults[key] = request.form[key]
-        if reportResults['notes'] == '':
-            reportResults['notes'] = 'NULL'
-        if reportResults['image'] == '':
-            reportResults['image'] = 'NULL'
         reportResults['owner'] = 'NULL'
 
         allergenResults = {}
@@ -45,12 +41,29 @@ def new_report():
             reportID = reports.insertReport(conn, reportResults)
             reports.insertRelations(conn, allergenResults, reportID, 'allergen')
             reports.insertRelations(conn, dietResults, reportID, 'diet')
-            return render_template('new_report.html', title='Submitted')
+            flash('form submitted')
+            return redirect(url_for('view_report', reportID=reportID))
         except Exception as err:
             flash('form submission error: '+str(err))
             return redirect(url_for('new_report'))
     else:
         return render_template('new_report.html', title='Make a Report')
+
+@app.route('/report/<reportID>/')
+def view_report(reportID):
+    conn = reports.getConn("eshumadi_db")
+    try:
+        reportDict = reports.buildInfoDict(conn, reportID)
+
+        return render_template('view_report.html', title=reportDict['name'], info=reportDict)
+    except Exception as err:
+        flash(str(err))
+        return redirect(url_for('homepage'))
+
+@app.route('/search/')
+def search():
+    print(request.args)
+    
 
 if __name__ == '__main__':
     import os
