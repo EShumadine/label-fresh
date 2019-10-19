@@ -23,6 +23,10 @@ body {
     text-decoration: none;
 }
 
+#navbar li a:hover {
+    background-color: #458505;
+}
+
 #search form label {
     color: white;
     text-align: center;
@@ -46,5 +50,16 @@ body {
 
 #iconlist li {
     float: left;
-    padding: 5px 5px;
+    padding: 20px 5px;
+}
+
+#messages {
+    font-size: 2em;
+    text-transform: uppercase;
+    color: #ff171d;
+}
+
+#content {
+    width: 97%;
+    margin: auto;
 }

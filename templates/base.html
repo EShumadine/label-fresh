@@ -7,7 +7,11 @@
     <link rel="stylesheet"
           href="{{url_for('static',filename='common-style.css')}}"
           type="text/css">
-    {% block styles %} {% endblock %}
+    {% block styles %}
+    <link rel="stylesheet"
+          href="{{url_for('static',filename='home-style.css')}}"
+          type="text/css">
+    {% endblock %}
 </head>
 <body>
 <div id="navbar">
@@ -48,6 +52,8 @@
         </div>
     {% endif %}
 {% endwith %}
+
+<div id="content">
 
 {% block content %}
 
@@ -102,6 +108,8 @@
 </p>
 
 {% endblock %}
+
+</div>
 
 <footer>
     <ul id="iconlist">       
