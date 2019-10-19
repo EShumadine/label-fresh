@@ -98,3 +98,14 @@ def buildInfoDict(conn, reportID):
                 reportDict['actualDiets'].append(label['code'])
     
     return reportDict
+
+def deleteReport(conn, reportID):
+    curs = dbi.cursor(conn)
+    rows = curs.execute('''
+                        DELETE FROM report
+                        WHERE id = %s''', [reportID])
+    if rows != 1:
+        print("deleted " + str(rows) + " rows")
+        return False
+    else:
+        return True

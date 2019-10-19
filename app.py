@@ -1,5 +1,5 @@
 from flask import (Flask, url_for, render_template, request,
-                    redirect, flash)
+                    redirect, flash, jsonify)
 import random
 import reports
 
@@ -23,7 +23,7 @@ def new_report():
         return render_template('new_report.html', title='Make a Report')
     elif request.method == 'POST':
         # build dictionaries
-        reportResults = {reportResults[key]: request.form[key] \
+        reportResults = {key: request.form[key] \
                           for key in ['name', 'meal', 'served', 'hall', 'image', 'notes']}
         reportResults['owner'] = 'NULL'
 
@@ -58,6 +58,25 @@ def view_report(reportID):
         flash(str(err))
         return redirect(url_for('homepage'))
 
+@app.route('/report/delete/', methods = ['GET', 'POST'])
+def delete_report():
+    if request.method == 'POST':
+        reportID = int(request.form['reportID'])
+        conn = reports.getConn("eshumadi_db")
+        err = reports.deleteReport(conn, reportID)
+        message = "Something went wrong." if err else flash("Successfully deleted.")
+        return jsonify({'error': err, 'message': message})
+    else:
+        reportID = request.args.get('reportID')
+        conn = reports.getConn("eshumadi_db")
+        err = reports.deleteReport(conn, reportID)
+        if err:
+            flash("Something went wrong.")
+            return redirect(url_for("view_report", reportID = reportID))
+        else:
+            flash("Successfully deleted.")
+            return redirect(url_for("homepage"))
+        
 @app.route('/search/')
 def search():
     conn = reports.getConn("eshumadi_db")

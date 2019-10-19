@@ -8,7 +8,7 @@
 <h1>{{info.name}}</h1>
 
 <div class="button">
-    <p><a href="">EDIT</a></p>
+    <a href="{{ url_for('delete_report') }}">DELETE</a>
 </div>
 
 <p>Served on {{info.served}} at {{info.hall}}.</p>
@@ -72,5 +72,9 @@
         None
     {% endif %}</p>
 </div>
+
+{% endblock %}
+
+{% block scripts %}
 
 {% endblock %}
