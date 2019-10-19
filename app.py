@@ -22,18 +22,16 @@ def new_report():
     if request.method == 'GET':
         return render_template('new_report.html', title='Make a Report')
     elif request.method == 'POST':
-        reportResults = {}
-        for key in ['name', 'meal', 'served', 'hall', 'image', 'notes']:
-            reportResults[key] = request.form[key]
+        # build dictionaries
+        reportResults = {reportResults[key]: request.form[key] \
+                          for key in ['name', 'meal', 'served', 'hall', 'image', 'notes']}
         reportResults['owner'] = 'NULL'
 
-        allergenResults = {}
-        allergenResults['listed'] = request.form.getlist('listed-allergens')
-        allergenResults['actual'] = request.form.getlist('present-allergens')
+        allergenResults = {'listed': request.form.getlist('listed-allergens'), \
+                            'actual': request.form.getlist('present-allergens')}
 
-        dietResults = {}
-        dietResults['listed'] = request.form.getlist('listed-diets')
-        dietResults['actual'] = request.form.getlist('followed-diets')
+        dietResults = {'listed': request.form.getlist('listed-diets'), \
+                        'actual': request.form.getlist('followed-diets')}
 
         # insert and redirect
         conn = reports.getConn("eshumadi_db")
