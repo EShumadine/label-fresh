@@ -1,0 +1,50 @@
+body {
+    font-family: sans-serif;
+}
+
+#navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #6b9b24;
+}
+
+#navbar li:not(#search) {
+    float: left;
+    border-right: 1px solid white;
+}
+
+#navbar li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 18px 16px;
+    text-decoration: none;
+}
+
+#search form label {
+    color: white;
+    text-align: center;
+}
+
+#search form {
+    padding: 16px 16px; 
+}
+
+#search {
+    float: right;
+    width: 70%;
+    text-align: right;
+}
+
+#iconlist {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#iconlist li {
+    float: left;
+    padding: 5px 5px;
+}
