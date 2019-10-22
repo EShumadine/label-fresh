@@ -1,11 +1,28 @@
 {% extends "base.html" %}
 
 {% block styles %}
+<link rel="stylesheet"
+          href="{{url_for('static',filename='new-style.css')}}"
+          type="text/css">
 {% endblock %}
 
 {% block content %}
 
 <h1>{{title}}</h1>
+
+<div id="legend">
+    <figure class="legend" id="allergen">
+        <p><img src="{{url_for('static', filename='allergens.png')}}"
+            alt="P=Peanuts,TN=Tree Nuts,M=Milk,SF=Shellfish,W=Wheat,E=Eggs,S=Soy,F=Fish"></p>
+        <figcaption>Allergen symbols used on dining hall labels.</figcaption>
+    </figure>
+    <figure class="legend" id="diet">
+        <p><img src="{{url_for('static',filename='diets.png')}}"
+            alt="V=Vegetarian,VE=Vegan,GS=Gluten Sensitive,H=Halal"></p>
+        <figcaption>Diet symbols used on dining hall labels.</figcaption>
+    </figure>
+    
+</div>
 
 <form method="POST" action="">
     <p><label>Date: 
@@ -14,6 +31,7 @@
     <p><label>Food name: 
         <input name="name" required>
     </label></p>
+    <br>
     <p><label>
         Dining Hall:
         <select name="hall" required>
@@ -34,89 +52,88 @@
             <option>Dinner</option>
         </select>
     </label></p>
-    <fieldset><legend>Allergens</legend>
-        <p><label>Listed Allergens: <br>
-            <input type="checkbox" name="listed-allergens" value="W">
-            Wheat
-            <input type="checkbox" name="listed-allergens" value="M">
-            Milk
-            <input type="checkbox" name="listed-allergens" value="E">
-            Eggs
-            <input type="checkbox" name="listed-allergens" value="S">
-            Soy
-            <input type="checkbox" name="listed-allergens" value="P">
-            Peanuts
-            <input type="checkbox" name="listed-allergens" value="TN">
-            Tree Nuts
-            <input type="checkbox" name="listed-allergens" value="F">
-            Fish
-            <input type="checkbox" name="listed-allergens" value="SF">
-            Shellfish
-            <input type="checkbox" name="listed-allergens" value="None">
-            None
-        </label></p>
-        <p><label>Allergens Present: <br>
-            <input type="checkbox" name="present-allergens" value="W">
-            Wheat
-            <input type="checkbox" name="present-allergens" value="M">
-            Milk
-            <input type="checkbox" name="present-allergens" value="E">
-            Eggs
-            <input type="checkbox" name="present-allergens" value="S">
-            Soy
-            <input type="checkbox" name="present-allergens" value="P">
-            Peanuts
-            <input type="checkbox" name="present-allergens" value="TN">
-            Tree Nuts
-            <input type="checkbox" name="present-allergens" value="F">
-            Fish
-            <input type="checkbox" name="present-allergens" value="SF">
-            Shellfish
-            <input type="checkbox" name="present-allergens" value="None">
-            None
-            <input type="checkbox" name="present-allergens" value="Unknown">
-            Unknown
-        </label></p>
-    </fieldset>
     <fieldset><legend>Diets</legend>
-        <p><label>Listed Diets: <br>
-            <input type="checkbox" name="listed-diets" value="VE">
-            Vegan
-            <input type="checkbox" name="listed-diets" value="V">
-            Vegetarian
-            <input type="checkbox" name="listed-diets" value="GS">
-            Gluten Sensitive
-            <input type="checkbox" name="listed-diets" value="H">
-            Halal
-            <input type="checkbox" name="listed-diets" value="None">
-            None
-        </label></p>
-        <p><label>Diets Followed: <br>
-            <input type="checkbox" name="followed-diets" value="VE">
-            Vegan
-            <input type="checkbox" name="followed-diets" value="V">
-            Vegetarian
-            <input type="checkbox" name="followed-diets" value="GS">
-            Gluten Sensitive
-            <input type="checkbox" name="followed-diets" value="H">
-            Halal
-            <input type="checkbox" name="followed-diets" value="None">
-            None
-            <input type="checkbox" name="followed-diets" value="Unknown">
-            Unknown
-        </label></p>
+        <p>Listed Diets: <br>
+            <label><input type="checkbox" name="listed-diets" value="VE">
+            Vegan</label>
+            <label><input type="checkbox" name="listed-diets" value="V">
+            Vegetarian</label>
+            <label><input type="checkbox" name="listed-diets" value="GS">
+            Gluten Sensitive</label>
+            <label><input type="checkbox" name="listed-diets" value="H">
+            Halal</label>
+            <label><input type="checkbox" name="listed-diets" value="None">
+            None</label>
+        </p><br>
+        <p>Diets Followed: <br>
+            <label><input type="checkbox" name="followed-diets" value="VE">
+            Vegan</label>
+            <label><input type="checkbox" name="followed-diets" value="V">
+            Vegetarian</label>
+            <label><input type="checkbox" name="followed-diets" value="GS">
+            Gluten Sensitive</label>
+            <label><input type="checkbox" name="followed-diets" value="H">
+            Halal</label>
+            <label><input type="checkbox" name="followed-diets" value="None">
+            None</label>
+            <label><input type="checkbox" name="followed-diets" value="Unknown">
+            Unknown</label>
+        </p>
+    </fieldset>
+    <fieldset><legend>Allergens</legend>
+        <p>Listed Allergens: <br>
+            <label><input type="checkbox" name="listed-allergens" value="W">
+            Wheat</label>
+            <label><input type="checkbox" name="listed-allergens" value="M">
+            Milk</label>
+            <label><input type="checkbox" name="listed-allergens" value="E">
+            Eggs</label>
+            <label><input type="checkbox" name="listed-allergens" value="S">
+            Soy</label>
+            <label><input type="checkbox" name="listed-allergens" value="P">
+            Peanuts</label>
+            <label><input type="checkbox" name="listed-allergens" value="TN">
+            Tree Nuts</label>
+            <label><input type="checkbox" name="listed-allergens" value="F">
+            Fish</label>
+            <label><input type="checkbox" name="listed-allergens" value="SF">
+            Shellfish</label>
+            <label><input type="checkbox" name="listed-allergens" value="None">
+            None</label>
+        </label></p><br>
+        <p>Allergens Present: <br>
+            <label><input type="checkbox" name="present-allergens" value="W">
+            Wheat</label>
+            <label><input type="checkbox" name="present-allergens" value="M">
+            Milk</label>
+            <label><input type="checkbox" name="present-allergens" value="E">
+            Eggs</label>
+            <label><input type="checkbox" name="present-allergens" value="S">
+            Soy</label>
+            <label><input type="checkbox" name="present-allergens" value="P">
+            Peanuts</label>
+            <label><input type="checkbox" name="present-allergens" value="TN">
+            Tree Nuts</label>
+            <label><input type="checkbox" name="present-allergens" value="F">
+            Fish</label>
+            <label><input type="checkbox" name="present-allergens" value="SF">
+            Shellfish</label>
+            <label><input type="checkbox" name="present-allergens" value="None">
+            None</label>
+            <label><input type="checkbox" name="present-allergens" value="Unknown">
+            Unknown</label>
+        </p>
     </fieldset>
     <p><label>
         Upload a picture <input type="file" name="image">
     </label></p>
+    <br>
     <p><label>
         Notes <br>
         <textarea name="notes" rows=3 cols=30></textarea>
     </label></p>
+    <br>
     <p><input type="submit" value="Submit"></p>
 </form>
-
-<p class="legend">Allergen legend</p>
-<p class="legend">Diet legend</p>
 
 {% endblock %}
