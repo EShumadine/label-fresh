@@ -27,18 +27,18 @@ def new_report():
                           for key in ['name', 'meal', 'served', 'hall', 'image', 'notes']}
         reportResults['owner'] = 'NULL'
 
-        allergenResults = {'listed': request.form.getlist('listed-allergens'), \
+        allergenResults = {'listed': request.form.getlist('listed-allergens'), 
                             'actual': request.form.getlist('present-allergens')}
 
-        dietResults = {'listed': request.form.getlist('listed-diets'), \
+        dietResults = {'listed': request.form.getlist('listed-diets'), 
                         'actual': request.form.getlist('followed-diets')}
 
         # insert and redirect
         conn = reports.getConn("eshumadi_db")
         try:
             reportID = reports.insertReport(conn, reportResults)
-            reports.insertRelations(conn, allergenResults, reportID, 'allergen')
-            reports.insertRelations(conn, dietResults, reportID, 'diet')
+            reports.insertLabels(conn, allergenResults, reportID, 'allergen')
+            reports.insertLabels(conn, dietResults, reportID, 'diet')
             flash('form submitted')
             return redirect(url_for('view_report', reportID=reportID))
         except Exception as err:
@@ -47,44 +47,52 @@ def new_report():
     else:
         return render_template('new_report.html', title='Make a Report')
 
-@app.route('/report/<reportID>/')
+@app.route('/report/<reportID>/', methods=['GET','POST'])
 def view_report(reportID):
     conn = reports.getConn("eshumadi_db")
-    try:
+    if request.method == 'GET':
         reportDict = reports.buildInfoDict(conn, reportID)
 
-        return render_template('view_report.html', title=reportDict['name'], info=reportDict)
-    except Exception as err:
-        flash(str(err))
-        return redirect(url_for('homepage'))
+        return render_template('view_report.html', 
+                                title=reportDict['name'], 
+                                info=reportDict)
+    else: # form submitted
+        if 'delete' in request.form:
+            err = reports.deleteReport(conn, reportID)
+            if err:
+                flash("Something went wrong.")
+                reportDict = reports.buildInfoDict(conn, reportID)
+                return render_template('view_report.html', 
+                                        title=reportDict['name'], 
+                                        info=reportDict)
+            else:
+                flash("Successfully deleted.")
+                 return redirect(url_for("homepage"))
+        else: # update
+            return redirect(url_for("update", reportID=reportID))
 
-@app.route('/report/delete/', methods = ['GET', 'POST'])
-def delete_report():
-    if request.method == 'POST':
-        reportID = int(request.form['reportID'])
-        conn = reports.getConn("eshumadi_db")
-        err = reports.deleteReport(conn, reportID)
-        message = "Something went wrong." if err else flash("Successfully deleted.")
-        return jsonify({'error': err, 'message': message})
-    else:
-        reportID = request.args.get('reportID')
-        conn = reports.getConn("eshumadi_db")
-        err = reports.deleteReport(conn, reportID)
-        if err:
-            flash("Something went wrong.")
-            return redirect(url_for("view_report", reportID = reportID))
-        else:
-            flash("Successfully deleted.")
-            return redirect(url_for("homepage"))
+@app.route('/update/<reportID>/', methods=['GET','POST'])
+def update(reportID):
+    conn = reports.getConn("eshumadi_db")
+    reportDict = reports.buildInfoDict(conn, reportID)
+    if request.method == 'GET':
+        return render_template('new_report.html',
+                                title='Update | ' + reportDict['name'],
+                                info=reportDict)
+    else: # form submitted
+        # DO STUFF
+        return render_template('new_report.html',
+                                title='Update | ' + reportDict['name'],
+                                info=reportDict)
         
 @app.route('/search/')
 def search():
     conn = reports.getConn("eshumadi_db")
     results = reports.searchReports(conn, request.args.get('query'), request.args.get('hall'))
-    return render_template('search.html', title="Search", \
-                                          query=request.args.get('query'), \
-                                          hall=request.args.get('hall'), \
-                                          numResults=len(results), \
+    return render_template('search.html', title="Search", 
+                                          query=request.args.get('query'), 
+                                          hall=request.args.get('hall'), 
+                                          numResults=len(results), 
                                           results=results)
 
 if __name__ == '__main__':

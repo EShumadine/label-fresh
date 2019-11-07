@@ -24,6 +24,122 @@
     
 </div>
 
+{% if info %}
+
+<form method="POST" action="">
+    <p><label>Date: 
+        <input type="date" name="served" required value="{{info.date}}">
+    </label></p>
+    <p><label>Food name: 
+        <input name="name" required value="{{info.name}}">
+    </label></p>
+    <br>
+    <p><label>
+        Dining Hall:
+            <select name="hall" required>
+                <option value="">select</option>
+                <option value="Bae Pow Lu Chow">Bae Pow Lu Chow (Lulu)</option>
+                <option>Tower</option>
+                <option>Bates</option>
+                <option>Stone Davis</option>
+                <option>Pomeroy</option>
+        </select>
+    </label></p>
+    <p><label>
+        Mealtime:
+        <select name="meal" required>
+            <option value="">select</option>
+            <option>Breakfast</option>
+            <option>Lunch</option>
+            <option>Dinner</option>
+        </select>
+    </label></p>
+    <fieldset><legend>Diets</legend>
+        <p>Listed Diets: <br>
+            <label><input type="checkbox" name="listed-diets" value="VE">
+            Vegan</label>
+            <label><input type="checkbox" name="listed-diets" value="V">
+            Vegetarian</label>
+            <label><input type="checkbox" name="listed-diets" value="GS">
+            Gluten Sensitive</label>
+            <label><input type="checkbox" name="listed-diets" value="H">
+            Halal</label>
+            <label><input type="checkbox" name="listed-diets" value="None">
+            None</label>
+        </p><br>
+        <p>Diets Followed: <br>
+            <label><input type="checkbox" name="followed-diets" value="VE">
+            Vegan</label>
+            <label><input type="checkbox" name="followed-diets" value="V">
+            Vegetarian</label>
+            <label><input type="checkbox" name="followed-diets" value="GS">
+            Gluten Sensitive</label>
+            <label><input type="checkbox" name="followed-diets" value="H">
+            Halal</label>
+            <label><input type="checkbox" name="followed-diets" value="None">
+            None</label>
+            <label><input type="checkbox" name="followed-diets" value="Unknown">
+            Unknown</label>
+        </p>
+    </fieldset>
+    <fieldset><legend>Allergens</legend>
+        <p>Listed Allergens: <br>
+            <label><input type="checkbox" name="listed-allergens" value="W">
+            Wheat</label>
+            <label><input type="checkbox" name="listed-allergens" value="M">
+            Milk</label>
+            <label><input type="checkbox" name="listed-allergens" value="E">
+            Eggs</label>
+            <label><input type="checkbox" name="listed-allergens" value="S">
+            Soy</label>
+            <label><input type="checkbox" name="listed-allergens" value="P">
+            Peanuts</label>
+            <label><input type="checkbox" name="listed-allergens" value="TN">
+         Tree Nuts</label>
+            <label><input type="checkbox" name="listed-allergens" value="F">
+            Fish</label>
+            <label><input type="checkbox" name="listed-allergens" value="SF">
+            Shellfish</label>
+            <label><input type="checkbox" name="listed-allergens" value="None">
+            None</label>
+        </label></p><br>
+        <p>Allergens Present: <br>
+            <label><input type="checkbox" name="present-allergens" value="W">
+            Wheat</label>
+            <label><input type="checkbox" name="present-allergens" value="M">
+            Milk</label>
+            <label><input type="checkbox" name="present-allergens" value="E">
+            Eggs</label>
+            <label><input type="checkbox" name="present-allergens" value="S">
+            Soy</label>
+            <label><input type="checkbox" name="present-allergens" value="P">
+             Peanuts</label>
+            <label><input type="checkbox" name="present-allergens" value="TN">
+            Tree Nuts</label>
+            <label><input type="checkbox" name="present-allergens" value="F">
+            Fish</label>
+            <label><input type="checkbox" name="present-allergens" value="SF">
+            Shellfish</label>
+            <label><input type="checkbox" name="present-allergens" value="None">
+            None</label>
+            <label><input type="checkbox" name="present-allergens" value="Unknown">
+            Unknown</label>
+        </p>
+    </fieldset>
+    <p><label>
+        Upload a picture (replaces any previously uploaded image) <input type="file" name="image">
+    </label></p>
+    <br>
+    <p><label>
+        Notes <br>
+        <textarea name="notes" rows=3 cols=30 value="{{info.notes}}"></textarea>
+    </label></p>
+    <br>
+    <p><input type="submit" value="Submit"></p>
+</form>
+
+{% else %}
+
 <form method="POST" action="">
     <p><label>Date: 
         <input type="date" name="served" required>
@@ -135,5 +251,7 @@
     <br>
     <p><input type="submit" value="Submit"></p>
 </form>
+
+{% endif %}
 
 {% endblock %}

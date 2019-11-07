@@ -22,7 +22,7 @@ def insertReport(conn, infoDict):
     curs.execute('SELECT LAST_INSERT_ID()')
     return curs.fetchone()[0]
 
-def insertRelations(conn, infoDict, reportID, kind):
+def insertLabels(conn, infoDict, reportID, kind):
     '''Inserts the listed and present/followed allergens or diets (depending
     on kind) given by the provided dictionary and associates them with the 
     given ID. Kind can be one of "allergen" or "diet".'''
