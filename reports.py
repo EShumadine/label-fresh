@@ -7,25 +7,40 @@ def getConn(db):
     conn.select_db(db)
     return conn
 
+def isDuplicate(curs, infoDict):
+    '''Returns true if the given report is a duplicate of one already in the
+    table, and false otherwise.'''
+    curs.execute('''SELECT id FROM report 
+                    WHERE name=%s 
+                    AND meal=%s
+                    AND served=%s
+                    AND hall=%s''',
+                    [infoDict['name'], infoDict['meal'], infoDict['served'],
+                    infoDict['hall']])
+    return curs.fetchone() == None
+
 def insertReport(conn, infoDict):
     '''Inserts a report into the report table given a database connection
     and a dictionary of values. Returns the unique ID of the just-inserted
     report.'''
     curs = dbi.cursor(conn)
-    # I need the insert and select statement to happen atomically, otherwise
-    # a concurrent insert could cause the returned id to be incorrect
-    curs.execute('''LOCK TABLES report WRITE''')
-    curs.execute('''
-        INSERT INTO report(name,meal,served,hall,image,notes,owner)
-        VALUES(%s, %s, %s, %s, %s, %s, %s)
-        ''', \
-        [infoDict['name'], infoDict['meal'], infoDict['served'], \
-        infoDict['hall'], infoDict['image'], infoDict['notes'], \
-        infoDict['owner']])
-    curs.execute('SELECT LAST_INSERT_ID()')
-    reportID = curs.fetchone()[0]
-    curs.execute('''UNLOCK TABLES''')
-    return reportID
+    if isDuplicate(curs, infoDict):
+        return -1
+    else:
+        # I need the insert and select statement to happen atomically, otherwise
+        # a concurrent insert could cause the returned id to be incorrect
+        curs.execute('''LOCK TABLES report WRITE''')
+        curs.execute('''
+            INSERT INTO report(name,meal,served,hall,image,notes,owner)
+            VALUES(%s, %s, %s, %s, %s, %s, %s)
+            ''', \
+            [infoDict['name'], infoDict['meal'], infoDict['served'], \
+            infoDict['hall'], infoDict['image'], infoDict['notes'], \
+            infoDict['owner']])
+        curs.execute('SELECT LAST_INSERT_ID()')
+        reportID = curs.fetchone()[0]
+        curs.execute('''UNLOCK TABLES''')
+        return reportID
 
 def insertLabels(conn, infoDict, reportID, kind):
     '''Inserts the listed and present/followed allergens or diets (depending
