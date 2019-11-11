@@ -12,6 +12,9 @@ def insertReport(conn, infoDict):
     and a dictionary of values. Returns the unique ID of the just-inserted
     report.'''
     curs = dbi.cursor(conn)
+    # I need the insert and select statement to happen atomically, otherwise
+    # a concurrent insert could cause the returned id to be incorrect
+    curs.execute('''LOCK TABLES report WRITE''')
     curs.execute('''
         INSERT INTO report(name,meal,served,hall,image,notes,owner)
         VALUES(%s, %s, %s, %s, %s, %s, %s)
@@ -20,7 +23,9 @@ def insertReport(conn, infoDict):
         infoDict['hall'], infoDict['image'], infoDict['notes'], \
         infoDict['owner']])
     curs.execute('SELECT LAST_INSERT_ID()')
-    return curs.fetchone()[0]
+    reportID = curs.fetchone()[0]
+    curs.execute('''UNLOCK TABLES''')
+    return reportID
 
 def insertLabels(conn, infoDict, reportID, kind):
     '''Inserts the listed and present/followed allergens or diets (depending
