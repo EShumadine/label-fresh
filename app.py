@@ -37,10 +37,14 @@ def new_report():
         conn = reports.getConn("eshumadi_db")
         try:
             reportID = reports.insertReport(conn, reportResults)
-            reports.insertLabels(conn, allergenResults, reportID, 'allergen')
-            reports.insertLabels(conn, dietResults, reportID, 'diet')
-            flash('form submitted')
-            return redirect(url_for('view_report', reportID=reportID))
+            if reportId == -1: # submission failed due to duplicate entry
+                flash('report already exists')
+                return render_template('new_report.html', title='Make a Report')
+            else:
+                reports.insertLabels(conn, allergenResults, reportID, 'allergen')
+                reports.insertLabels(conn, dietResults, reportID, 'diet')
+                flash('form submitted')
+                return redirect(url_for('view_report', reportID=reportID))
         except Exception as err:
             flash('form submission error: '+str(err))
             return redirect(url_for('new_report'))
