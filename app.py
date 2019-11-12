@@ -22,32 +22,18 @@ def new_report():
     if request.method == 'GET':
         return render_template('new_report.html', title='Make a Report')
     elif request.method == 'POST':
-        # build dictionaries
-        reportResults = {key: request.form[key] \
-                          for key in ['name', 'meal', 'served', 'hall', 'image', 'notes']}
-        reportResults['owner'] = 'NULL'
-
-        allergenResults = {'listed': request.form.getlist('listed-allergens'), 
-                            'actual': request.form.getlist('present-allergens')}
-
-        dietResults = {'listed': request.form.getlist('listed-diets'), 
-                        'actual': request.form.getlist('followed-diets')}
+        # build dictionary
+        reportResults = buildFormDict(request.form)
 
         # insert and redirect
         conn = reports.getConn("eshumadi_db")
-        try:
-            reportID = reports.insertReport(conn, reportResults)
-            if reportId == -1: # submission failed due to duplicate entry
-                flash('report already exists')
-                return render_template('new_report.html', title='Make a Report')
-            else:
-                reports.insertLabels(conn, allergenResults, reportID, 'allergen')
-                reports.insertLabels(conn, dietResults, reportID, 'diet')
-                flash('form submitted')
-                return redirect(url_for('view_report', reportID=reportID))
-        except Exception as err:
-            flash('form submission error: '+str(err))
-            return redirect(url_for('new_report'))
+        reportID = reports.insertReport(conn, reportResults)
+        if reportID == -1: # submission failed due to duplicate entry
+            flash('report already exists')
+            return render_template('new_report.html', title='Make a Report')
+        else:
+            flash('form submitted')
+            return redirect(url_for('view_report', reportID=reportID))
     else:
         return render_template('new_report.html', title='Make a Report')
 
@@ -71,7 +57,7 @@ def view_report(reportID):
                                         info=reportDict)
             else:
                 flash("Successfully deleted.")
-                 return redirect(url_for("homepage"))
+                return redirect(url_for("homepage"))
         else: # update
             return redirect(url_for("update", reportID=reportID))
 
@@ -84,10 +70,17 @@ def update(reportID):
                                 title='Update | ' + reportDict['name'],
                                 info=reportDict)
     else: # form submitted
-        # DO STUFF
-        return render_template('new_report.html',
-                                title='Update | ' + reportDict['name'],
-                                info=reportDict)
+        reportResults = buildFormDict(request.form)
+        conn = reports.getConn("eshumadi_db")
+        reportID = reports.insertReport(conn, reportResults)
+        if reportID == -1: # submission failed due to duplicate entry
+            flash('report already exists')
+            return render_template('new_report.html', 
+                                    title='Update | ' + reportDict['name'],
+                                    info=reportDict)
+        else:
+            flash('form submitted')
+            return redirect(url_for('view_report', reportID=reportID))
         
 @app.route('/search/')
 def search():
@@ -98,6 +91,18 @@ def search():
                                           hall=request.args.get('hall'), 
                                           numResults=len(results), 
                                           results=results)
+
+def buildFormDict(formData):
+    reportResults = {key: formData[key] 
+                    for key in ['name', 'meal', 'served', 'hall', 'image', 'notes']}
+    reportResults['owner'] = 'NULL'
+        
+    reportResults['allergens'] = {'listed': formData.getlist('listed-allergens'), 
+                                'actual': formData.getlist('present-allergens')}
+
+    reportResults['diets'] = {'listed': formData.getlist('listed-diets'), 
+                            'actual': formData.getlist('followed-diets')}
+    return reportResults
 
 if __name__ == '__main__':
     import os

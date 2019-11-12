@@ -27,8 +27,8 @@
 {% if info %}
 
 <form method="POST" action="">
-    <p><label>Date: 
-        <input type="date" name="served" required value="{{info.date}}">
+    <p><label>Date:
+        <input type="date" name="served" required value="{{info.served}}">
     </label></p>
     <p><label>Food name: 
         <input name="name" required value="{{info.name}}">
@@ -38,91 +38,137 @@
         Dining Hall:
             <select name="hall" required>
                 <option value="">select</option>
-                <option value="Bae Pow Lu Chow">Bae Pow Lu Chow (Lulu)</option>
-                <option>Tower</option>
-                <option>Bates</option>
-                <option>Stone Davis</option>
-                <option>Pomeroy</option>
+                <option value="Bae Pow Lu Chow" 
+                {% if info.hall == "Bae Pow Lu Chow" %} selected {% endif %}>
+                Bae Pow Lu Chow (Lulu)</option>
+                <option
+                {% if info.hall == "Tower" %} selected {% endif %}>
+                Tower</option>
+                <option
+                {% if info.hall == "Bates" %} selected {% endif %}>
+                Bates</option>
+                <option
+                {% if info.hall == "Stone Davis" %} selected {% endif %}>
+                Stone Davis</option>
+                <option
+                {% if info.hall == "Pomeroy" %} selected {% endif %}>
+                Pomeroy</option>
         </select>
     </label></p>
     <p><label>
         Mealtime:
         <select name="meal" required>
             <option value="">select</option>
-            <option>Breakfast</option>
-            <option>Lunch</option>
-            <option>Dinner</option>
+            <option
+            {% if info.meal == "Breakfast" %} selected {% endif %}>
+            Breakfast</option>
+            <option
+            {% if info.meal == "Lunch" %} selected {% endif %}>
+            Lunch</option>
+            <option
+            {% if info.meal == "Dinner" %} selected {% endif %}>
+            Dinner</option>
         </select>
     </label></p>
     <fieldset><legend>Diets</legend>
         <p>Listed Diets: <br>
-            <label><input type="checkbox" name="listed-diets" value="VE">
+            <label><input type="checkbox" name="listed-diets" value="VE"
+                {% if "VE" in info.listedDiets %} checked {% endif %}>
             Vegan</label>
-            <label><input type="checkbox" name="listed-diets" value="V">
+            <label><input type="checkbox" name="listed-diets" value="V"
+                {% if "V" in info.listedDiets %} checked {% endif %}>
             Vegetarian</label>
-            <label><input type="checkbox" name="listed-diets" value="GS">
+            <label><input type="checkbox" name="listed-diets" value="GS"
+                {% if "GS" in info.listedDiets %} checked {% endif %}>
             Gluten Sensitive</label>
-            <label><input type="checkbox" name="listed-diets" value="H">
+            <label><input type="checkbox" name="listed-diets" value="H"
+                {% if "H" in info.listedDiets %} checked {% endif %}>
             Halal</label>
-            <label><input type="checkbox" name="listed-diets" value="None">
+            <label><input type="checkbox" name="listed-diets" value="None"
+                {% if "None" in info.listedDiets %} checked {% endif %}>
             None</label>
         </p><br>
         <p>Diets Followed: <br>
-            <label><input type="checkbox" name="followed-diets" value="VE">
+            <label><input type="checkbox" name="followed-diets" value="VE"
+                {% if "VE" in info.actualDiets %} checked {% endif %}>
             Vegan</label>
-            <label><input type="checkbox" name="followed-diets" value="V">
+            <label><input type="checkbox" name="followed-diets" value="V"
+                {% if "V" in info.actualDiets %} checked {% endif %}>
             Vegetarian</label>
-            <label><input type="checkbox" name="followed-diets" value="GS">
+            <label><input type="checkbox" name="followed-diets" value="GS"
+                {% if "GS" in info.actualDiets %} checked {% endif %}>
             Gluten Sensitive</label>
-            <label><input type="checkbox" name="followed-diets" value="H">
+            <label><input type="checkbox" name="followed-diets" value="H"
+                {% if "H" in info.actualDiets %} checked {% endif %}>
             Halal</label>
-            <label><input type="checkbox" name="followed-diets" value="None">
+            <label><input type="checkbox" name="followed-diets" value="None"
+                {% if "None" in info.actualDiets %} checked {% endif %}>
             None</label>
-            <label><input type="checkbox" name="followed-diets" value="Unknown">
+            <label><input type="checkbox" name="followed-diets" value="Unknown"
+                {% if "Unknown" in info.actualDiets %} checked {% endif %}>
             Unknown</label>
         </p>
     </fieldset>
     <fieldset><legend>Allergens</legend>
         <p>Listed Allergens: <br>
-            <label><input type="checkbox" name="listed-allergens" value="W">
+            <label><input type="checkbox" name="listed-allergens" value="W"
+                {% if "W" in info.listedAllergens %} checked {% endif %}>
             Wheat</label>
-            <label><input type="checkbox" name="listed-allergens" value="M">
+            <label><input type="checkbox" name="listed-allergens" value="M"
+                {% if "M" in info.listedAllergens %} checked {% endif %}>
             Milk</label>
-            <label><input type="checkbox" name="listed-allergens" value="E">
+            <label><input type="checkbox" name="listed-allergens" value="E"
+                {% if "E" in info.listedAllergens %} checked {% endif %}>
             Eggs</label>
-            <label><input type="checkbox" name="listed-allergens" value="S">
+            <label><input type="checkbox" name="listed-allergens" value="S"
+                {% if "S" in info.listedAllergens %} checked {% endif %}>
             Soy</label>
-            <label><input type="checkbox" name="listed-allergens" value="P">
+            <label><input type="checkbox" name="listed-allergens" value="P"
+                {% if "P" in info.listedAllergens %} checked {% endif %}>
             Peanuts</label>
-            <label><input type="checkbox" name="listed-allergens" value="TN">
+            <label><input type="checkbox" name="listed-allergens" value="TN"
+                {% if "TN" in info.listedAllergens %} checked {% endif %}>
             Tree Nuts</label>
-            <label><input type="checkbox" name="listed-allergens" value="F">
+            <label><input type="checkbox" name="listed-allergens" value="F"
+                {% if "F" in info.listedAllergens %} checked {% endif %}>
             Fish</label>
-            <label><input type="checkbox" name="listed-allergens" value="SF">
+            <label><input type="checkbox" name="listed-allergens" value="SF"
+                {% if "SF" in info.listedAllergens %} checked {% endif %}>
             Shellfish</label>
-            <label><input type="checkbox" name="listed-allergens" value="None">
+            <label><input type="checkbox" name="listed-allergens" value="None"
+                {% if "None" in info.listedAllergens %} checked {% endif %}>
             None</label>
         </label></p><br>
         <p>Allergens Present: <br>
-            <label><input type="checkbox" name="present-allergens" value="W">
+            <label><input type="checkbox" name="present-allergens" value="W"
+                {% if "W" in info.actualAllergens %} checked {% endif %}>
             Wheat</label>
-            <label><input type="checkbox" name="present-allergens" value="M">
+            <label><input type="checkbox" name="present-allergens" value="M"
+                {% if "M" in info.actualAllergens %} checked {% endif %}>
             Milk</label>
-            <label><input type="checkbox" name="present-allergens" value="E">
+            <label><input type="checkbox" name="present-allergens" value="E"
+                {% if "E" in info.actualAllergens %} checked {% endif %}>
             Eggs</label>
-            <label><input type="checkbox" name="present-allergens" value="S">
+            <label><input type="checkbox" name="present-allergens" value="S"
+                {% if "S" in info.actualAllergens %} checked {% endif %}>
             Soy</label>
-            <label><input type="checkbox" name="present-allergens" value="P">
+            <label><input type="checkbox" name="present-allergens" value="P"
+                {% if "P" in info.actualAllergens %} checked {% endif %}>
              Peanuts</label>
-            <label><input type="checkbox" name="present-allergens" value="TN">
+            <label><input type="checkbox" name="present-allergens" value="TN"
+                {% if "TN" in info.actualAllergens %} checked {% endif %}>
             Tree Nuts</label>
-            <label><input type="checkbox" name="present-allergens" value="F">
+            <label><input type="checkbox" name="present-allergens" value="F"
+                {% if "F" in info.actualAllergens %} checked {% endif %}>
             Fish</label>
-            <label><input type="checkbox" name="present-allergens" value="SF">
+            <label><input type="checkbox" name="present-allergens" value="SF"
+                {% if "SF" in info.actualAllergens %} checked {% endif %}>
             Shellfish</label>
-            <label><input type="checkbox" name="present-allergens" value="None">
+            <label><input type="checkbox" name="present-allergens" value="None"
+                {% if "None" in info.actualAllergens %} checked {% endif %}>
             None</label>
-            <label><input type="checkbox" name="present-allergens" value="Unknown">
+            <label><input type="checkbox" name="present-allergens" value="Unknown"
+                {% if "Unknown" in info.actualAllergens %} checked {% endif %}>
             Unknown</label>
         </p>
     </fieldset>

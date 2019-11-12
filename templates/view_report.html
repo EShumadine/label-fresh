@@ -11,11 +11,8 @@
     <input type="submit" name="delete" value="DELETE">
     <input type="submit" name="update" value="UPDATE">
 </form>
-<div class="button">
-    <a href="{{ url_for('delete_report') }}">DELETE</a>
-</div>
 
-<p>Served on {{info.served}} at {{info.hall}}.</p>
+<p>Served on {{info.served}} for {{info.meal}} at {{info.hall}}.</p>
 
 {% if info.image|wordcount > 0 %}
 <div id="image">
