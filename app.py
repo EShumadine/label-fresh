@@ -24,6 +24,9 @@ def new_report():
     elif request.method == 'POST':
         # build dictionary
         reportResults = buildFormDict(request.form)
+        if not reportResults: # bad selection
+            flash('None or Unknown must be the only checked option in the row.')
+            return render_template('new_report.html', title='Make a Report')
 
         # insert and redirect
         conn = reports.getConn("eshumadi_db")
@@ -49,7 +52,7 @@ def view_report(reportID):
     else: # form submitted
         if 'delete' in request.form:
             err = reports.deleteReport(conn, reportID)
-            if err:
+            if not err:
                 flash("Something went wrong.")
                 reportDict = reports.buildInfoDict(conn, reportID)
                 return render_template('view_report.html', 
@@ -71,9 +74,20 @@ def update(reportID):
                                 info=reportDict)
     else: # form submitted
         reportResults = buildFormDict(request.form)
+        
+        if not reportResults: # bad selection
+            flash('None or Unknown must be the only checked option in the row.')
+            return render_template('new_report.html',
+                                    title='Update | ' + reportDict['name'],
+                                    info=reportDict)
+        
         conn = reports.getConn("eshumadi_db")
-        reportID = reports.insertReport(conn, reportResults)
-        if reportID == -1: # submission failed due to duplicate entry
+        changed = False
+        for key in ['name','served','meal','hall']:
+            if str(reportResults[key]) != str(reportDict[key]):
+                changed = True
+        unique = reports.updateReport(conn, reportResults, reportID, changed)
+        if not unique: # submission failed due to duplicate entry
             flash('report already exists')
             return render_template('new_report.html', 
                                     title='Update | ' + reportDict['name'],
@@ -93,10 +107,16 @@ def search():
                                           results=results)
 
 def buildFormDict(formData):
+    '''Builds a dictionary containing the information from the new report
+    or update report form.'''
     reportResults = {key: formData[key] 
                     for key in ['name', 'meal', 'served', 'hall', 'image', 'notes']}
     reportResults['owner'] = 'NULL'
-        
+    
+    for labelType in ['listed-allergens', 'present-allergens', 'listed-diets', 'followed-diets']:
+        labels = formData.getlist(labelType)
+        if ('None' in labels or 'Unknown' in labels) and len(labels) > 1:
+            return None
     reportResults['allergens'] = {'listed': formData.getlist('listed-allergens'), 
                                 'actual': formData.getlist('present-allergens')}
 

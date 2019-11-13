@@ -18,16 +18,17 @@ I would like to have integration with the online menu, but it is run entirely in
   - [x] Web page to view individual existing entries in the database
   - [x] Search function by food name
   - [x] Redirects to list of links to individual results
-  - [ ] Ability to update existing entries
+  - [x] Ability to update existing entries
   - [x] Ability to narrow search by dining hall
   - [x] Ability to delete existing entries
-  - [ ] Wellesley login
-  - [ ] Ownership check for deletion
+  - [ ] Ability to upload images
 * Alpha version
   - [ ] Calendar view of entries
   - [ ] Group entries by date
   - [ ] Display in month table
   - [ ] Filter calendar view by dining hall
   - [ ] Filter calendar view by meal
+  - [ ] Wellesley login
+  - [ ] Ownership check for deletion
 * Beta version
   - [ ] Make it look pretty (I have drawings)
