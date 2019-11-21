@@ -72,6 +72,7 @@ def view_report(reportID):
                                         title=reportDict['name'], 
                                         info=reportDict)
             else:
+                os.remove(os.path.join(os.path.join('static',app.config['UPLOADS']),err))
                 flash("Successfully deleted.")
                 return redirect(url_for("homepage"))
         else: # update

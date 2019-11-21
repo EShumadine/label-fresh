@@ -152,12 +152,14 @@ def buildInfoDict(conn, reportID):
     return reportDict
 
 def deleteReport(conn, reportID):
-    curs = dbi.cursor(conn)
+    curs = dbi.dictCursor(conn)
+    curs.execute('''SELECT imagefile FROM report WHERE id=%s''',[reportID])
+    imagefile = curs.fetchone()['imagefile']
     rows = curs.execute('''
                         DELETE FROM report
                         WHERE id = %s''', [reportID])
     if rows != 1:
         print("deleted " + str(rows) + " rows")
-        return False
+        return None
     else:
-        return True
+        return imagefile
