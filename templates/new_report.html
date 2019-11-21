@@ -26,7 +26,7 @@
 
 {% if info %}
 
-<form method="POST" action="">
+<form method="POST" action="" enctype="multipart/form-data">
     <p><label>Date:
         <input type="date" name="served" required value="{{info.served}}">
     </label></p>
@@ -186,7 +186,7 @@
 
 {% else %}
 
-<form method="POST" action="">
+<form method="POST" action="" enctype="multipart/form-data">
     <p><label>Date: 
         <input type="date" name="served" required>
     </label></p>

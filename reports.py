@@ -46,18 +46,18 @@ def insertReport(conn, infoDict):
     and a dictionary of values. Returns the unique ID of the just-inserted
     report.'''
     curs = dbi.cursor(conn)
-    curs.execute('''LOCK TABLES report WRITE,label WRITE''')
+    curs.execute('''LOCK TABLES report WRITE,label WRITE,picfile WRITE''')
     if isDuplicate(curs, infoDict):
         curs.execute('''UNLOCK TABLES''')
         return -1
     else:
         curs.execute('''
-            INSERT INTO report(name,meal,served,hall,image,notes,owner)
-            VALUES(%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO report(name,meal,served,hall,imagefile,notes,owner)
+            VALUES(%s, %s, %s, %s, %s, %s)
             ''',
             [infoDict['name'], infoDict['meal'], infoDict['served'],
-            infoDict['hall'], infoDict['image'], infoDict['notes'],
-            infoDict['owner']])
+            infoDict['hall'], infoDict['notes'], infoDict['owner'],
+            infoDict['imagefile']])
         curs.execute('SELECT LAST_INSERT_ID()')
         reportID = curs.fetchone()[0]
         insertLabels(conn, infoDict['allergens'], reportID, 'allergen')

@@ -8,7 +8,7 @@ CREATE TABLE report (
 	meal enum('Breakfast', 'Lunch', 'Dinner') NOT NULL,
 	hall enum('Bates', 'Tower', 'Stone Davis', 'Pomeroy', 'Bae Pow Lu Chow') NOT NULL,
 	notes varchar(300),
-	image varchar(30),
+	imagefile varchar(50),
 	owner varchar(8)
 ) ENGINE = InnoDB;
 
