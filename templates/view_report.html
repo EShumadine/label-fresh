@@ -14,12 +14,6 @@
 
 <p>Served on {{info.served}} for {{info.meal}} at {{info.hall}}.</p>
 
-{% if info.image|wordcount > 0 %}
-<div id="image">
-    <img href="{{info.image}}">
-</div>
-{% endif %}
-
 <div id="label-info">
     <table id="labels">
         <tr>
@@ -64,6 +58,10 @@
         </tr>
     </table>
 </div>
+
+{% if imagesource %}
+<img id="report-image" src={{url_for('static', filename=imagesource)}}>
+{% endif %}
 
 <div id="notes">
     <h2>Notes</h2>

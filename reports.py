@@ -28,11 +28,11 @@ def updateReport(conn, infoDict, reportID, changed):
             curs.execute('''UNLOCK TABLES''')
             return False
     curs.execute('''UPDATE report SET
-                    name=%s,meal=%s,served=%s,hall=%s,image=%s,
+                    name=%s,meal=%s,served=%s,hall=%s,imagefile=%s,
                     notes=%s,owner=%s
                     WHERE id=%s''',
                     [infoDict['name'], infoDict['meal'], 
-                    infoDict['served'], infoDict['hall'], infoDict['image'], 
+                    infoDict['served'], infoDict['hall'], infoDict['imagefile'], 
                     infoDict['notes'], infoDict['owner'],
                     reportID])
     curs.execute('''DELETE FROM label WHERE id=%s''', [reportID])
@@ -46,18 +46,18 @@ def insertReport(conn, infoDict):
     and a dictionary of values. Returns the unique ID of the just-inserted
     report.'''
     curs = dbi.cursor(conn)
-    curs.execute('''LOCK TABLES report WRITE,label WRITE,picfile WRITE''')
+    curs.execute('''LOCK TABLES report WRITE,label WRITE''')
     if isDuplicate(curs, infoDict):
         curs.execute('''UNLOCK TABLES''')
         return -1
     else:
         curs.execute('''
             INSERT INTO report(name,meal,served,hall,imagefile,notes,owner)
-            VALUES(%s, %s, %s, %s, %s, %s)
+            VALUES(%s, %s, %s, %s, %s, %s, %s)
             ''',
             [infoDict['name'], infoDict['meal'], infoDict['served'],
-            infoDict['hall'], infoDict['notes'], infoDict['owner'],
-            infoDict['imagefile']])
+            infoDict['hall'], infoDict['imagefile'], infoDict['notes'], 
+            infoDict['owner']])
         curs.execute('SELECT LAST_INSERT_ID()')
         reportID = curs.fetchone()[0]
         insertLabels(conn, infoDict['allergens'], reportID, 'allergen')
@@ -79,11 +79,11 @@ def insertLabels(conn, infoDict, reportID, kind):
                 [reportID, entry, key, kind])
 
 def getReport(conn, reportID):
-    '''Returns the ID, name, date served, dining hall, mealtime, notes, image, 
-    and owner of the report specified by ID as a dictionary.'''
+    '''Returns the ID, name, date served, dining hall, mealtime, notes, and 
+    owner of the report specified by ID as a dictionary.'''
     curs = dbi.dictCursor(conn)
     curs.execute('''
-                SELECT * FROM report 
+                SELECT name, served, hall, meal, notes, owner FROM report 
                 WHERE report.id = %s
                 ''', [reportID])
     return curs.fetchone() # ids are unique
@@ -98,6 +98,15 @@ def getLabels(conn, reportID):
                 WHERE report.id = %s
                 ''', [reportID])
     return curs.fetchall()
+
+def getImage(conn, reportID):
+    '''Returns the filename of the image associated with the specified report.'''
+    curs = dbi.dictCursor(conn)
+    curs.execute('''
+                SELECT imagefile FROM report
+                WHERE id = %s
+                ''', [reportID])
+    return curs.fetchone()
 
 def searchReports(conn, name, hall):
     '''Returns a list of all reports matching the given search string anywhere
