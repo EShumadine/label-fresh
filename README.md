@@ -21,7 +21,7 @@ I would like to have integration with the online menu, but it is run entirely in
   - [x] Ability to update existing entries
   - [x] Ability to narrow search by dining hall
   - [x] Ability to delete existing entries
-  - [ ] Ability to upload images
+  - [x] Ability to upload images
 * Alpha version
   - [ ] Calendar view of entries
   - [ ] Group entries by date
