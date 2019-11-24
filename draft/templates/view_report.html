@@ -1,13 +1,20 @@
 {% extends "base.html" %}
 
 {% block styles %}
+<link rel="stylesheet"
+          href="{{url_for('static',filename='view-style.css')}}"
+          type="text/css">
 {% endblock %}
 
 {% block content %}
 
-<h1>{{info.name}}</h1>
+{% if imagesource %}
+<img id="report-image" src={{url_for('static', filename=imagesource)}}>
+{% endif %}
 
-<form method="POST" action="">
+<h1 class="header">{{info.name}}</h1>
+
+<form class="header" method="POST" action="">
     <input type="submit" name="delete" value="DELETE">
     <input type="submit" name="update" value="UPDATE">
 </form>
@@ -58,10 +65,6 @@
         </tr>
     </table>
 </div>
-
-{% if imagesource %}
-<img id="report-image" src={{url_for('static', filename=imagesource)}}>
-{% endif %}
 
 <div id="notes">
     <h2>Notes</h2>
