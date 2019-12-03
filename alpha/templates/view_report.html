@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet"
+          href="{{url_for('static',filename='view-style.css')}}"
+          type="text/css">
+{% endblock %}
+
+{% block content %}
+
+{% if imagesource %}
+<img id="report-image" src={{url_for('static', filename=imagesource)}}>
+{% endif %}
+
+<h1 class="header">{{info.name}}</h1>
+
+{% if owner %}
+<form class="header" method="POST" action="">
+    <input type="submit" name="delete" value="DELETE">
+    <input type="submit" name="update" value="UPDATE">
+</form>
+{% endif %}
+
+<p>Served on {{info.served}} for {{info.meal}} at {{info.hall}}.</p>
+
+<div id="label-info">
+    <table id="labels">
+        <tr>
+            <th>Listed Allergens</th>
+            <th>Allergens Present</th>
+        </tr>
+        <tr>
+            <td>
+                <ul>
+                    {% for allergen in info.listedAllergens %}
+                    <li>{{allergen}}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>
+                <ul>
+                    {% for allergen in info.actualAllergens %}
+                    <li>{{allergen}}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <th>Listed Diets</th>
+            <th>Diets Followed</th>
+        </tr>
+        <tr>
+            <td>
+                <ul>
+                    {% for diet in info.listedDiets %}
+                    <li>{{diet}}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>
+                <ul>
+                    {% for diet in info.actualDiets %}
+                    <li>{{diet}}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div id="notes">
+    <h2>Notes</h2>
+    <p>{% if info.notes|wordcount > 0 %}
+        {{info.notes}}
+        {% else %}
+        None
+    {% endif %}</p>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}

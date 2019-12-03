@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet"
+          href="{{url_for('static',filename='new-style.css')}}"
+          type="text/css">
+{% endblock %}
+
+{% block content %}
+
+<h1>{{title}}</h1>
+
+<div id="legend">
+    <figure class="legend" id="allergen">
+        <p><img src="{{url_for('static', filename='allergens.png')}}"
+            alt="P=Peanuts,TN=Tree Nuts,M=Milk,SF=Shellfish,W=Wheat,E=Eggs,S=Soy,F=Fish"></p>
+        <figcaption>Allergen symbols used on dining hall labels.</figcaption>
+    </figure>
+    <figure class="legend" id="diet">
+        <p><img src="{{url_for('static',filename='diets.png')}}"
+            alt="V=Vegetarian,VE=Vegan,GS=Gluten Sensitive,H=Halal"></p>
+        <figcaption>Diet symbols used on dining hall labels.</figcaption>
+    </figure>
+    
+</div>
+
+{% if info %}
+
+<form method="POST" action="" enctype="multipart/form-data">
+    <p><label>Date:
+        <input type="date" name="served" required value="{{info.served}}">
+    </label></p>
+    <p><label>Food name: 
+        <input name="name" required value="{{info.name}}">
+    </label></p>
+    <br>
+    <p><label>
+        Dining Hall:
+            <select name="hall" required>
+                <option value="">select</option>
+                <option value="Bae Pow Lu Chow" 
+                {% if info.hall == "Bae Pow Lu Chow" %} selected {% endif %}>
+                Bae Pow Lu Chow (Lulu)</option>
+                <option
+                {% if info.hall == "Tower" %} selected {% endif %}>
+                Tower</option>
+                <option
+                {% if info.hall == "Bates" %} selected {% endif %}>
+                Bates</option>
+                <option
+                {% if info.hall == "Stone Davis" %} selected {% endif %}>
+                Stone Davis</option>
+                <option
+                {% if info.hall == "Pomeroy" %} selected {% endif %}>
+                Pomeroy</option>
+        </select>
+    </label></p>
+    <p><label>
+        Mealtime:
+        <select name="meal" required>
+            <option value="">select</option>
+            <option
+            {% if info.meal == "Breakfast" %} selected {% endif %}>
+            Breakfast</option>
+            <option
+            {% if info.meal == "Lunch" %} selected {% endif %}>
+            Lunch</option>
+            <option
+            {% if info.meal == "Dinner" %} selected {% endif %}>
+            Dinner</option>
+        </select>
+    </label></p>
+    <fieldset><legend>Diets</legend>
+        <p>Listed Diets: <br>
+            <label><input type="checkbox" name="listed-diets" value="VE"
+                {% if "VE" in info.listedDiets %} checked {% endif %}>
+            Vegan</label>
+            <label><input type="checkbox" name="listed-diets" value="V"
+                {% if "V" in info.listedDiets %} checked {% endif %}>
+            Vegetarian</label>
+            <label><input type="checkbox" name="listed-diets" value="GS"
+                {% if "GS" in info.listedDiets %} checked {% endif %}>
+            Gluten Sensitive</label>
+            <label><input type="checkbox" name="listed-diets" value="H"
+                {% if "H" in info.listedDiets %} checked {% endif %}>
+            Halal</label>
+            <label><input type="checkbox" name="listed-diets" value="None"
+                {% if "None" in info.listedDiets %} checked {% endif %}>
+            None</label>
+        </p><br>
+        <p>Diets Followed: <br>
+            <label><input type="checkbox" name="followed-diets" value="VE"
+                {% if "VE" in info.actualDiets %} checked {% endif %}>
+            Vegan</label>
+            <label><input type="checkbox" name="followed-diets" value="V"
+                {% if "V" in info.actualDiets %} checked {% endif %}>
+            Vegetarian</label>
+            <label><input type="checkbox" name="followed-diets" value="GS"
+                {% if "GS" in info.actualDiets %} checked {% endif %}>
+            Gluten Sensitive</label>
+            <label><input type="checkbox" name="followed-diets" value="H"
+                {% if "H" in info.actualDiets %} checked {% endif %}>
+            Halal</label>
+            <label><input type="checkbox" name="followed-diets" value="None"
+                {% if "None" in info.actualDiets %} checked {% endif %}>
+            None</label>
+            <label><input type="checkbox" name="followed-diets" value="Unknown"
+                {% if "Unknown" in info.actualDiets %} checked {% endif %}>
+            Unknown</label>
+        </p>
+    </fieldset>
+    <fieldset><legend>Allergens</legend>
+        <p>Listed Allergens: <br>
+            <label><input type="checkbox" name="listed-allergens" value="W"
+                {% if "W" in info.listedAllergens %} checked {% endif %}>
+            Wheat</label>
+            <label><input type="checkbox" name="listed-allergens" value="M"
+                {% if "M" in info.listedAllergens %} checked {% endif %}>
+            Milk</label>
+            <label><input type="checkbox" name="listed-allergens" value="E"
+                {% if "E" in info.listedAllergens %} checked {% endif %}>
+            Eggs</label>
+            <label><input type="checkbox" name="listed-allergens" value="S"
+                {% if "S" in info.listedAllergens %} checked {% endif %}>
+            Soy</label>
+            <label><input type="checkbox" name="listed-allergens" value="P"
+                {% if "P" in info.listedAllergens %} checked {% endif %}>
+            Peanuts</label>
+            <label><input type="checkbox" name="listed-allergens" value="TN"
+                {% if "TN" in info.listedAllergens %} checked {% endif %}>
+            Tree Nuts</label>
+            <label><input type="checkbox" name="listed-allergens" value="F"
+                {% if "F" in info.listedAllergens %} checked {% endif %}>
+            Fish</label>
+            <label><input type="checkbox" name="listed-allergens" value="SF"
+                {% if "SF" in info.listedAllergens %} checked {% endif %}>
+            Shellfish</label>
+            <label><input type="checkbox" name="listed-allergens" value="None"
+                {% if "None" in info.listedAllergens %} checked {% endif %}>
+            None</label>
+        </label></p><br>
+        <p>Allergens Present: <br>
+            <label><input type="checkbox" name="present-allergens" value="W"
+                {% if "W" in info.actualAllergens %} checked {% endif %}>
+            Wheat</label>
+            <label><input type="checkbox" name="present-allergens" value="M"
+                {% if "M" in info.actualAllergens %} checked {% endif %}>
+            Milk</label>
+            <label><input type="checkbox" name="present-allergens" value="E"
+                {% if "E" in info.actualAllergens %} checked {% endif %}>
+            Eggs</label>
+            <label><input type="checkbox" name="present-allergens" value="S"
+                {% if "S" in info.actualAllergens %} checked {% endif %}>
+            Soy</label>
+            <label><input type="checkbox" name="present-allergens" value="P"
+                {% if "P" in info.actualAllergens %} checked {% endif %}>
+             Peanuts</label>
+            <label><input type="checkbox" name="present-allergens" value="TN"
+                {% if "TN" in info.actualAllergens %} checked {% endif %}>
+            Tree Nuts</label>
+            <label><input type="checkbox" name="present-allergens" value="F"
+                {% if "F" in info.actualAllergens %} checked {% endif %}>
+            Fish</label>
+            <label><input type="checkbox" name="present-allergens" value="SF"
+                {% if "SF" in info.actualAllergens %} checked {% endif %}>
+            Shellfish</label>
+            <label><input type="checkbox" name="present-allergens" value="None"
+                {% if "None" in info.actualAllergens %} checked {% endif %}>
+            None</label>
+            <label><input type="checkbox" name="present-allergens" value="Unknown"
+                {% if "Unknown" in info.actualAllergens %} checked {% endif %}>
+            Unknown</label>
+        </p>
+    </fieldset>
+    <p><label>
+        Upload a picture (replaces any previously uploaded image) <input type="file" name="image">
+    </label></p>
+    <br>
+    <p><label>
+        Notes <br>
+        <textarea name="notes" rows=3 cols=30 value="{{info.notes}}"></textarea>
+    </label></p>
+    <br>
+    <p><input type="submit" value="Submit"></p>
+</form>
+
+{% else %}
+
+<form method="POST" action="" enctype="multipart/form-data">
+    <p><label>Date: 
+        <input type="date" name="served" required>
+    </label></p>
+    <p><label>Food name: 
+        <input name="name" required>
+    </label></p>
+    <br>
+    <p><label>
+        Dining Hall:
+        <select name="hall" required>
+            <option value="">select</option>
+            <option value="Bae Pow Lu Chow">Bae Pow Lu Chow (Lulu)</option>
+            <option>Tower</option>
+            <option>Bates</option>
+            <option>Stone Davis</option>
+            <option>Pomeroy</option>
+        </select>
+    </label></p>
+    <p><label>
+        Mealtime:
+        <select name="meal" required>
+            <option value="">select</option>
+            <option>Breakfast</option>
+            <option>Lunch</option>
+            <option>Dinner</option>
+        </select>
+    </label></p>
+    <fieldset><legend>Diets</legend>
+        <p>Listed Diets: <br>
+            <label><input type="checkbox" name="listed-diets" value="VE">
+            Vegan</label>
+            <label><input type="checkbox" name="listed-diets" value="V">
+            Vegetarian</label>
+            <label><input type="checkbox" name="listed-diets" value="GS">
+            Gluten Sensitive</label>
+            <label><input type="checkbox" name="listed-diets" value="H">
+            Halal</label>
+            <label><input type="checkbox" name="listed-diets" value="None">
+            None</label>
+        </p><br>
+        <p>Diets Followed: <br>
+            <label><input type="checkbox" name="followed-diets" value="VE">
+            Vegan</label>
+            <label><input type="checkbox" name="followed-diets" value="V">
+            Vegetarian</label>
+            <label><input type="checkbox" name="followed-diets" value="GS">
+            Gluten Sensitive</label>
+            <label><input type="checkbox" name="followed-diets" value="H">
+            Halal</label>
+            <label><input type="checkbox" name="followed-diets" value="None">
+            None</label>
+            <label><input type="checkbox" name="followed-diets" value="Unknown">
+            Unknown</label>
+        </p>
+    </fieldset>
+    <fieldset><legend>Allergens</legend>
+        <p>Listed Allergens: <br>
+            <label><input type="checkbox" name="listed-allergens" value="W">
+            Wheat</label>
+            <label><input type="checkbox" name="listed-allergens" value="M">
+            Milk</label>
+            <label><input type="checkbox" name="listed-allergens" value="E">
+            Eggs</label>
+            <label><input type="checkbox" name="listed-allergens" value="S">
+            Soy</label>
+            <label><input type="checkbox" name="listed-allergens" value="P">
+            Peanuts</label>
+            <label><input type="checkbox" name="listed-allergens" value="TN">
+            Tree Nuts</label>
+            <label><input type="checkbox" name="listed-allergens" value="F">
+            Fish</label>
+            <label><input type="checkbox" name="listed-allergens" value="SF">
+            Shellfish</label>
+            <label><input type="checkbox" name="listed-allergens" value="None">
+            None</label>
+        </label></p><br>
+        <p>Allergens Present: <br>
+            <label><input type="checkbox" name="present-allergens" value="W">
+            Wheat</label>
+            <label><input type="checkbox" name="present-allergens" value="M">
+            Milk</label>
+            <label><input type="checkbox" name="present-allergens" value="E">
+            Eggs</label>
+            <label><input type="checkbox" name="present-allergens" value="S">
+            Soy</label>
+            <label><input type="checkbox" name="present-allergens" value="P">
+            Peanuts</label>
+            <label><input type="checkbox" name="present-allergens" value="TN">
+            Tree Nuts</label>
+            <label><input type="checkbox" name="present-allergens" value="F">
+            Fish</label>
+            <label><input type="checkbox" name="present-allergens" value="SF">
+            Shellfish</label>
+            <label><input type="checkbox" name="present-allergens" value="None">
+            None</label>
+            <label><input type="checkbox" name="present-allergens" value="Unknown">
+            Unknown</label>
+        </p>
+    </fieldset>
+    <p><label>
+        Upload a picture <input type="file" name="image">
+    </label></p>
+    <br>
+    <p><label>
+        Notes <br>
+        <textarea name="notes" rows=3 cols=30></textarea>
+    </label></p>
+    <br>
+    <p><input type="submit" value="Submit"></p>
+</form>
+
+{% endif %}
+
+{% endblock %}

@@ -28,7 +28,7 @@ I would like to have integration with the online menu, but it is run entirely in
   - [ ] Display in month table
   - [ ] Filter calendar view by dining hall
   - [ ] Filter calendar view by meal
-  - [ ] Wellesley login
-  - [ ] Ownership check for deletion
+  - [x] Wellesley login
+  - [x] Ownership check for deletion and update
 * Beta version
   - [ ] Make it look pretty (I have drawings)

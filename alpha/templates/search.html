@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block styles %}
+{% endblock %}
+
+{% block content %}
+
+<h1>Search Results</h1>
+<h2>Searching for {{query}} at {{hall}}</h2>
+<br>
+<p>{{numResults}} results</p>
+{% if results %}
+    {% for result in results %}
+    <div class="search-result">
+        <h3><a href="{{url_for('view_report', reportID=result.id)}}">{{result.name}}</a></h3>
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>Dining Hall</th>
+                <th>Meal</th>
+            </tr>
+            <tr>
+                <td>{{result.served}}</td>
+                <td>{{result.hall}}</td>
+                <td>{{result.meal}}</td>
+            </tr>
+        </table>
+    </div>
+    {% endfor %}
+{% endif %}
+
+{% endblock %}
