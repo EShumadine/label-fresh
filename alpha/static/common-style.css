@@ -7,7 +7,7 @@ body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-color: #6b9b24;
+    background-color: #3c7700;
 }
 
 #navbar li:not(#search) {

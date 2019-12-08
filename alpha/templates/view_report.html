@@ -9,7 +9,7 @@
 {% block content %}
 
 {% if imagesource %}
-<img id="report-image" src={{url_for('static', filename=imagesource)}}>
+<img id="report-image" src={{url_for('static', filename=imagesource)}} alt="">
 {% endif %}
 
 <h1 class="header">{{info.name}}</h1>
