@@ -17,7 +17,7 @@
 <div id="navbar">
     <ul>
         <li><a href="{{ url_for('homepage') }}">Home</a></li>
-        <li><a href="">Calendar</a></li>
+        <li><a href="{{url_for('calendar')}}">Calendar</a></li>
         <li><a href="{{ url_for('new_report') }}">Report a Label</a></li>
         <li>
             {% if username %}
@@ -85,7 +85,7 @@
 <h2>How It Works</h2>
 <ul>
     <li>
-        Click on <a href="">Calendar</a> to see a calendar view 
+        Click on <a href="{{url_for('calendar')}}">Calendar</a> to see a calendar view 
         of all of the reports submitted so far.
     </li>
     <li>

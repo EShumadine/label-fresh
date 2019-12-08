@@ -25,7 +25,12 @@
     {% endfor %}
 {% endfor %}
 
-
+{% if nextDate %}
+<form class="show-more" method="POST" action="{{url_for('showMore')}}">
+    <input type="hidden" name="next-date" value="{{nextDate}}"> 
+    <input type="submit" name="show" value="SHOW MORE">
+</form>
+{% endif %}
 
 {% endblock %}
 
