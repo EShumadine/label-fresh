@@ -23,11 +23,8 @@ I would like to have integration with the online menu, but it is run entirely in
   - [x] Ability to delete existing entries
   - [x] Ability to upload images
 * Alpha version
-  - [ ] Calendar view of entries
-  - [ ] Group entries by date
-  - [ ] Display in month table
-  - [ ] Filter calendar view by dining hall
-  - [ ] Filter calendar view by meal
+  - [x] Chronological view of entries
+  - [ ] With Ajax
   - [x] Wellesley login
   - [x] Ownership check for deletion and update
 * Beta version
