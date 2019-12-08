@@ -2,7 +2,7 @@ from flask import (Flask, url_for, render_template, request,
                     redirect, flash, send_from_directory,
                     session)
 from werkzeug import secure_filename
-import random, reports, imghdr
+import random, reports, imghdr, datetime
 from flask_cas import CAS
 
 app = Flask(__name__)
@@ -192,6 +192,23 @@ def search():
                                           numResults=len(results), 
                                           results=results,
                                           username=username)
+
+@app.route('/view/')
+def calendar():
+    conn = reports.getConn("eshumadi_db")
+    results = reports.listReports(conn, datetime.datetime.now(), 10)
+    username = None
+    if 'CAS_USERNAME' in session:
+        username = session['CAS_USERNAME']
+
+    dates = set([report['served'] for report in results])
+    #print(min(dates) - datetime.timedelta(days=1))
+    dateDict = {date: [] for date in dates}
+    for report in results:
+        dateDict[report['served']].append(report)
+
+    return render_template('calendar.html', title='View',
+                                            dates=dateDict)
 
 def buildFormDict(formData, req):
     '''Builds a dictionary containing the information from the new report
