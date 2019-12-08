@@ -20,13 +20,21 @@ def isDuplicate(curs, infoDict):
     return curs.fetchone() != None
 
 def updateReport(conn, infoDict, reportID, changed):
+    '''Updates the report of the given reportID. infoDict contains the new values
+    for the report, and changed is a boolean that determines whether or not
+    any of the identifying information of the report has been changed (such
+    as the name, dining hall, or date served).'''
     curs = dbi.cursor(conn)
+    # we don't want anyone else changing anything about this report while we're 
+    # changing it, and concurrent changes to other reports could affect whether 
+    # this update results in a duplicate entry or not
     curs.execute('''LOCK TABLES report WRITE,label WRITE''')
-    if changed:
+    if changed: # duplication is only possible if identifying information has changed
         print('checking duplicate')
         if isDuplicate(curs, infoDict):
-            curs.execute('''UNLOCK TABLES''')
+            curs.execute('''UNLOCK TABLES''') # don't forget to unlock
             return False
+
     curs.execute('''UPDATE report SET
                     name=%s,meal=%s,served=%s,hall=%s,imagefile=%s,
                     notes=%s,owner=%s
@@ -35,10 +43,13 @@ def updateReport(conn, infoDict, reportID, changed):
                     infoDict['served'], infoDict['hall'], infoDict['imagefile'], 
                     infoDict['notes'], infoDict['owner'],
                     reportID])
+
+    # delete and re-insert labels
     curs.execute('''DELETE FROM label WHERE id=%s''', [reportID])
     insertLabels(conn, infoDict['allergens'], reportID, 'allergen')
     insertLabels(conn, infoDict['diets'], reportID, 'diet')
-    curs.execute('''UNLOCK TABLES''')
+
+    curs.execute('''UNLOCK TABLES''') # don't forget to unlock
     return True
 
 def insertReport(conn, infoDict):
@@ -160,6 +171,7 @@ def getOwner(conn, reportID):
     return curs.fetchone()['owner']
 
 def deleteReport(conn, reportID):
+    '''Deletes the report given by reportID.'''
     curs = dbi.dictCursor(conn)
     curs.execute('''SELECT imagefile FROM report WHERE id=%s''',[reportID])
     imagefile = curs.fetchone()['imagefile']

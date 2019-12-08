@@ -43,6 +43,7 @@ def new_report():
     username = None
     if 'CAS_USERNAME' in session:
         username = session['CAS_USERNAME']
+
     if request.method == 'GET':
         return render_template('new_report.html', title='Make a Report', username=username)
     elif request.method == 'POST':
@@ -72,6 +73,7 @@ def view_report(reportID):
     username = None
     if 'CAS_USERNAME' in session:
         username = session['CAS_USERNAME']
+
     if request.method == 'GET':
         reportDict = reports.buildInfoDict(conn, reportID)
 
@@ -135,6 +137,7 @@ def update(reportID):
     username = None
     if 'CAS_USERNAME' in session:
         username = session['CAS_USERNAME']
+
     if username:
         if username != reports.getOwner(conn, reportID):
             flash('Permission denied.')
@@ -182,6 +185,7 @@ def search():
     username = None
     if 'CAS_USERNAME' in session:
         username = session['CAS_USERNAME']
+
     return render_template('search.html', title="Search", 
                                           query=request.args.get('query'), 
                                           hall=request.args.get('hall'), 
@@ -241,6 +245,7 @@ if __name__ == '__main__':
             print('For CAS, choose a port from 1943 to 1950')
             sys.exit()
     else:
+        print('CAS not enabled.')
         port=os.getuid()
     app.debug = True
     app.run('0.0.0.0',port)
