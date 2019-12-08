@@ -219,6 +219,9 @@ def buildFormDict(formData, req):
     
     for labelType in ['listed-allergens', 'present-allergens', 'listed-diets', 'followed-diets']:
         labels = formData.getlist(labelType)
+        if len(labels) == 0:
+            flash('At least one checkbox in each set must be checked.')
+            return None
         if ('None' in labels or 'Unknown' in labels) and len(labels) > 1:
             flash('None or Unknown must be the only checked option in the row.')
             return None

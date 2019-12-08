@@ -93,9 +93,8 @@ def getLabels(conn, reportID):
     list of dictionaries, where each dictionary represents an allergen/diet.'''
     curs = dbi.dictCursor(conn)
     curs.execute('''
-                SELECT code,kind,labeled FROM report 
-                INNER JOIN label ON (report.id)
-                WHERE report.id = %s
+                SELECT code,kind,labeled FROM label
+                WHERE id = %s
                 ''', [reportID])
     return curs.fetchall()
 
@@ -148,7 +147,7 @@ def buildInfoDict(conn, reportID):
                 reportDict['actualAllergens'].append(label['code'])
             else: # actual diet
                 reportDict['actualDiets'].append(label['code'])
-    
+    print(reportDict)
     return reportDict
 
 def getOwner(conn, reportID):
