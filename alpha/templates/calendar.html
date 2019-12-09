@@ -2,12 +2,21 @@
 
 {% block styles %}
 
+<link rel="stylesheet"
+      href="{{url_for('static',filename='calendar-style.css')}}"
+      type="text/css">
+
 {% endblock %}
 
 {% block content %}
+<p>This button turns on/off all the JavaScript:
+        <button id="progressive_enhancement">Turn On Progressive Enhancement</button></p>
 
+<h1>Existing Reports</h1>
+
+<ul id="dates">
 {% for date,items in dates|dictsort(reverse=true) %}
-    <h2>{{date}}</h2>
+    <li><h2>{{date}}</h2></li>
     {% for item in items %}
         <div class="calendar-item">
             <h3><a href="{{url_for('view_report', reportID=item.id)}}">{{item.name}}</a></h3>
@@ -24,16 +33,37 @@
         </div>
     {% endfor %}
 {% endfor %}
+</ul>
 
 {% if nextDate %}
-<form class="show-more" method="POST" action="{{url_for('showMore')}}">
-    <input type="hidden" name="next-date" value="{{nextDate}}"> 
-    <input type="submit" name="show" value="SHOW MORE">
+<form id="showMore" method="POST" action="{{url_for('showMore')}}">
+    <input id="next-date" type="hidden" name="next-date" value="{{nextDate}}"> 
+    <input id="show-submit" type="submit" name="show" value="SHOW MORE">
 </form>
 {% endif %}
 
 {% endblock %}
 
 {% block scripts %}
+
+<script>
+    var progressive_on = false;
+
+    $("#progressive_enhancement").on('click', function () {
+        if(progressive_on) {
+            // turn it off
+            $("#progressive_enhancement").text('Turn on Progressive Enhancement');
+            progressive_on = false;
+        } else {
+            // turn it on
+            $("#progressive_enhancement").text('Turn off Progressive Enhancement');
+            progressive_on = true;
+        }
+    });
+
+    var AjaxURL = "{{url_for('showMoreAjax')}}";
+</script>
+
+<script src="{{url_for('static', filename='calendarAjax.js')}}"></script>
 
 {% endblock %}

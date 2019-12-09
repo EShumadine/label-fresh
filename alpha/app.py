@@ -195,12 +195,11 @@ def search():
 
 @app.route('/view/')
 def calendar():
-    conn = reports.getConn("eshumadi_db")
     username = None
     if 'CAS_USERNAME' in session:
         username = session['CAS_USERNAME']
 
-    info = listSome(datetime.datetime.now(), 10)
+    info = listSome(datetime.datetime.now().strftime('%Y-%m-%d'), 2)
 
     return render_template('calendar.html', title='View',
                                             dates=info[0],
@@ -209,9 +208,7 @@ def calendar():
 @app.route('/show-more/', methods=['POST'])
 def showMore():
     nextDate = request.form.get('next-date')
-    nextDate = datetime.datetime.strptime(nextDate, '%Y-%m-%d')
 
-    conn = reports.getConn("eshumadi_db")
     username = None
     if 'CAS_USERNAME' in session:
         username = session['CAS_USERNAME']
@@ -222,24 +219,42 @@ def showMore():
                                             dates=info[0],
                                             nextDate=info[1])
 
+@app.route('/show-more-ajax/', methods=['POST'])
+def showMoreAjax():
+    nextDate = request.form.get('next-date')
+
+    username = None
+    if 'CAS_USERNAME' in session:
+        username = session['CAS_USERNAME']
+    
+    info = listSome(nextDate, 10)
+
+    infoList = [{date: dateList} for date, dateList in info[0].items()] # preserve sorting
+    for dateList in info[0].values():
+        for report in dateList: # add URLs
+            report['url'] = url_for('view_report', reportID=report['id'])
+
+    return {'reports': infoList, 'nextDate': info[1]}
+
 def listSome(startDate, numReports):
     '''Returns a dictionary of lists with a total of numReports existing reports 
-    from most recent to least recent relative to startDate (a datetime instance)
+    from most recent to least recent relative to startDate
     and the next start date if there are reports remaining.'''
+    conn = reports.getConn("eshumadi_db")
     results = reports.listReports(conn, startDate, numReports+1)
 
     nextDate = None
     if len(results) <= numReports:
         dates = set([report['served'] for report in results])
-        dateDict = {date: [] for date in dates}
+        dateDict = {datetime.datetime.strftime(date, '%Y-%m-%d'): [] for date in dates}
         for report in results:
-            dateDict[report['served']].append(report)
+            dateDict[datetime.datetime.strftime(report['served'], '%Y-%m-%d')].append(report)
     else:
         dates = set([report['served'] for report in results[:-1]])
-        dateDict = {date: [] for date in dates}
-        for report in results[:-1]:
-            dateDict[report['served']].append(report)
         nextDate = (min(dates) - datetime.timedelta(days=1))
+        dateDict = {datetime.datetime.strftime(date, '%Y-%m-%d'): [] for date in dates}
+        for report in results[:-1]:
+            dateDict[datetime.datetime.strftime(report['served'], '%Y-%m-%d')].append(report)
     return (dateDict, nextDate)
 
 def buildFormDict(formData, req):

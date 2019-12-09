@@ -186,14 +186,13 @@ def deleteReport(conn, reportID):
 
 def listReports(conn, startDate, numReports):
     '''Returns a list of numReports existing reports from most recent to least recent
-    relative to startDate (a datetime instance).'''
+    relative to startDate.'''
     curs = dbi.dictCursor(conn)
-    start = startDate.strftime('%Y-%m-%d')
     curs.execute('''
                 SELECT id,name,served,meal,hall FROM report
                 WHERE served <= %s
                 ORDER BY served DESC, hall
                 LIMIT %s
                 ''',
-                [start, numReports])
+                [startDate, numReports])
     return curs.fetchall()
