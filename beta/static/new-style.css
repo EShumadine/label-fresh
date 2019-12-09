@@ -1,0 +1,28 @@
+.legend {
+    float: right;
+    width: 20%;
+    font-size: 0.9em;
+    font-style: italic;
+    text-align: center;
+}
+
+#legend {
+    margin-left: auto;
+    margin-right: 0;
+    clear: right;
+}
+
+#diet {
+    margin-top: 60px;
+}
+
+.legend img {
+    width: 80%;
+    margin: auto;
+}
+
+form p {
+    display: inline;
+    padding: 5px;
+    line-height: 2;
+}
