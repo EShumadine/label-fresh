@@ -12,15 +12,16 @@ function showmore(info) {
         var dateList = document.createElement('li');
         var dateHead = document.createElement('h2');
         dateHead.innerHTML = date;
-        var dateHeader = dateList.appendChild(dateHead);
-
-        // add to date list
-        $("#dates").append(dateHeader);
+        var itemList = document.createElement('ul');
+        itemList.setAttribute('class', 'items');
+        dateList.appendChild(dateHead);
+        dateList.appendChild(itemList);
 
         for (var item in reports[index][date]) {
             item = reports[index][date][item];
 
             // create the full elements to add for report
+            var listItem = document.createElement('li');
             var table = document.createElement('table');
             var div = document.createElement('div');
             div.setAttribute('class', 'calendar-item');
@@ -40,6 +41,8 @@ function showmore(info) {
             meal.innerHTML = item['meal'];
 
             // connect into structure
+            itemList.appendChild(listItem);
+            listItem.appendChild(div);
             div.appendChild(headText);
             headText.appendChild(link);
             div.appendChild(table);
@@ -49,11 +52,11 @@ function showmore(info) {
             table.appendChild(row2);
             row2.appendChild(hall);
             row2.appendChild(meal);
-
-            // add to DOM
-            $("#dates").append(div);
         }
+        // add to DOM
+        $("#dates").append(dateList);
     }
+
     if (nextDate != null) {
         // set next date
         $("#next-date").val(nextDate);

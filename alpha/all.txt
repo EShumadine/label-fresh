@@ -1,0 +1,1392 @@
+====================== app.py =====================
+from flask import (Flask, url_for, render_template, request,
+                    redirect, flash, send_from_directory,
+                    session)
+from werkzeug import secure_filename
+import random, reports, imghdr, datetime
+from flask_cas import CAS
+
+app = Flask(__name__)
+
+app.secret_key = ''.join([ random.choice(('ABCDEFGHIJKLMNOPQRSTUVXYZ' +
+                                          'abcdefghijklmnopqrstuvxyz' +
+                                          '0123456789'))
+                           for i in range(20) ])
+
+CAS(app)
+
+app.config['CAS_SERVER'] = 'https://login.wellesley.edu:443'
+app.config['CAS_LOGIN_ROUTE'] = '/module.php/casserver/cas.php/login'
+app.config['CAS_LOGOUT_ROUTE'] = '/module.php/casserver/cas.php/logout'
+app.config['CAS_VALIDATE_ROUTE'] = '/module.php/casserver/serviceValidate.php'
+app.config['CAS_AFTER_LOGIN'] = 'logged_in'
+
+# This gets us better error messages for certain common request errors
+app.config['TRAP_BAD_REQUEST_ERRORS'] = True
+
+app.config['UPLOADS'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 1*1024*1024 # 1 MB
+
+@app.route('/')
+def homepage():
+    if 'CAS_USERNAME' in session:
+        return render_template('base.html', title='Home', username=session['CAS_USERNAME'])
+    else:
+        return render_template('base.html', title='Home')
+
+@app.route('/logged_in/')
+def logged_in():
+    flash('Successfully logged in as ' + session['CAS_USERNAME'] + '.')
+    return redirect(url_for('homepage'))
+
+@app.route('/report/', methods=['GET','POST'])
+def new_report():
+    username = None
+    if 'CAS_USERNAME' in session:
+        username = session['CAS_USERNAME']
+
+    if request.method == 'GET':
+        return render_template('new_report.html', title='Make a Report', username=username)
+    elif request.method == 'POST':
+        # build dictionary
+        reportResults = buildFormDict(request.form, request)
+        if not reportResults: # bad selection
+            return render_template('new_report.html', title='Make a Report', username=username)
+
+        # insert and redirect
+        conn = reports.getConn("eshumadi_db")
+        reportID = reports.insertReport(conn, reportResults)
+        if reportID == -1: # submission failed due to duplicate entry
+            flash('report already exists')
+            return render_template('new_report.html', title='Make a Report', username=username)
+        else:
+            if reportResults['imagefile']:
+                pathname = os.path.join(os.path.join('static',app.config['UPLOADS']),reportResults['imagefile'])
+                reportResults['image'].save(pathname)
+            flash('form submitted')
+            return redirect(url_for('view_report', reportID=reportID))
+    else:
+        return render_template('new_report.html', title='Make a Report', username=username)
+
+@app.route('/report/<reportID>/', methods=['GET','POST'])
+def view_report(reportID):
+    conn = reports.getConn("eshumadi_db")
+    username = None
+    if 'CAS_USERNAME' in session:
+        username = session['CAS_USERNAME']
+
+    if request.method == 'GET':
+        reportDict = reports.buildInfoDict(conn, reportID)
+
+        conn = reports.getConn("eshumadi_db")
+        imagefile = reports.getImage(conn, reportID)
+        if not imagefile['imagefile']:
+            return render_template('view_report.html', 
+                                    title=reportDict['name'], 
+                                    info=reportDict,
+                                    username=username,
+                                    owner=(username==reports.getOwner(conn,reportID)))
+        else:
+            pathname = os.path.join(app.config['UPLOADS'],imagefile['imagefile'])
+            return render_template('view_report.html', 
+                                    title=reportDict['name'], 
+                                    imagesource=pathname, 
+                                    info=reportDict,
+                                    username=username,
+                                    owner=(username==reports.getOwner(conn,reportID)))
+    else: # form submitted
+        if 'delete' in request.form:
+            if username:
+                if username != reports.getOwner(conn, reportID):
+                    flash('Permission denied.')
+                    return render_template('view_report.html', 
+                                            title=reportDict['name'], 
+                                            info=reportDict,
+                                            username=username,
+                                            owner=(username==reports.getOwner(conn,reportID)))
+            else:
+                err = reports.deleteReport(conn, reportID)
+                if not err:
+                    flash("Something went wrong.")
+                    reportDict = reports.buildInfoDict(conn, reportID)
+                    return render_template('view_report.html', 
+                                            title=reportDict['name'], 
+                                            info=reportDict,
+                                            username=username,
+                                            owner=(username==reports.getOwner(conn,reportID)))
+                else:
+                    os.remove(os.path.join(os.path.join('static',app.config['UPLOADS']),err))
+                    flash("Successfully deleted.")
+                    return redirect(url_for("homepage"))
+        else: # update
+            return redirect(url_for("update", reportID=reportID))
+
+@app.route('/image/<reportID>/')
+def image(reportID):
+    conn = reports.getConn("eshumadi_db")
+    imagefile = reports.getImage(conn, reportID)
+    if not imagefile:
+        flash('no file found')
+        return redirect(url_for(homepage))
+    else:
+        return send_from_directory(os.path.join('static',app.config['UPLOADS']),imagefile['imagefile'])
+
+@app.route('/update/<reportID>/', methods=['GET','POST'])
+def update(reportID):
+    conn = reports.getConn("eshumadi_db")
+    reportDict = reports.buildInfoDict(conn, reportID)
+    username = None
+    if 'CAS_USERNAME' in session:
+        username = session['CAS_USERNAME']
+
+    if username:
+        if username != reports.getOwner(conn, reportID):
+            flash('Permission denied.')
+            return render_template('view_report.html', 
+                                    title=reportDict['name'], 
+                                    info=reportDict,
+                                    username=username)
+    else:
+        if request.method == 'GET':
+            return render_template('new_report.html',
+                                    title='Update | ' + reportDict['name'],
+                                    info=reportDict,
+                                    username=username)
+        else: # form submitted
+            reportResults = buildFormDict(request.form, request)
+        
+            if not reportResults: # bad selection
+                return render_template('new_report.html',
+                                        title='Update | ' + reportDict['name'],
+                                        info=reportDict,
+                                        username=username)
+        
+            conn = reports.getConn("eshumadi_db")
+            changed = False
+            for key in ['name','served','meal','hall']:
+                if str(reportResults[key]) != str(reportDict[key]):
+                    changed = True
+            unique = reports.updateReport(conn, reportResults, reportID, changed)
+            if not unique: # submission failed due to duplicate entry
+                flash('report already exists')
+                return render_template('new_report.html', 
+                                        title='Update | ' + reportDict['name'],
+                                        info=reportDict,
+                                        username=username)
+            else:
+                pathname = os.path.join(os.path.join('static',app.config['UPLOADS']),reportResults['imagefile'])
+                reportResults['image'].save(pathname)
+                flash('form submitted')
+                return redirect(url_for('view_report', reportID=reportID))
+        
+@app.route('/search/')
+def search():
+    conn = reports.getConn("eshumadi_db")
+    results = reports.searchReports(conn, request.args.get('query'), request.args.get('hall'))
+    username = None
+    if 'CAS_USERNAME' in session:
+        username = session['CAS_USERNAME']
+
+    return render_template('search.html', title="Search", 
+                                          query=request.args.get('query'), 
+                                          hall=request.args.get('hall'), 
+                                          numResults=len(results), 
+                                          results=results,
+                                          username=username)
+
+@app.route('/view/')
+def calendar():
+    username = None
+    if 'CAS_USERNAME' in session:
+        username = session['CAS_USERNAME']
+
+    info = listSome(datetime.datetime.now().strftime('%Y-%m-%d'), 2)
+
+    return render_template('calendar.html', title='View',
+                                            dates=info[0],
+                                            nextDate=info[1])
+
+@app.route('/show-more/', methods=['POST'])
+def showMore():
+    nextDate = request.form.get('next-date')
+
+    username = None
+    if 'CAS_USERNAME' in session:
+        username = session['CAS_USERNAME']
+    
+    info = listSome(nextDate, 10)
+
+    return render_template('calendar.html', title='View',
+                                            dates=info[0],
+                                            nextDate=info[1])
+
+@app.route('/show-more-ajax/', methods=['POST'])
+def showMoreAjax():
+    nextDate = request.form.get('next-date')
+
+    username = None
+    if 'CAS_USERNAME' in session:
+        username = session['CAS_USERNAME']
+    
+    info = listSome(nextDate, 10)
+
+    infoList = [{date: dateList} for date, dateList in info[0].items()] # preserve sorting
+    for dateList in info[0].values():
+        for report in dateList: # add URLs
+            report['url'] = url_for('view_report', reportID=report['id'])
+
+    return {'reports': infoList, 'nextDate': info[1]}
+
+def listSome(startDate, numReports):
+    '''Returns a dictionary of lists with a total of numReports existing reports 
+    from most recent to least recent relative to startDate
+    and the next start date if there are reports remaining.'''
+    conn = reports.getConn("eshumadi_db")
+    results = reports.listReports(conn, startDate, numReports+1)
+
+    nextDate = None
+    if len(results) <= numReports:
+        dates = set([report['served'] for report in results])
+        dateDict = {datetime.datetime.strftime(date, '%Y-%m-%d'): [] for date in dates}
+        for report in results:
+            dateDict[datetime.datetime.strftime(report['served'], '%Y-%m-%d')].append(report)
+    else:
+        dates = set([report['served'] for report in results[:-1]])
+        nextDate = (min(dates) - datetime.timedelta(days=1))
+        dateDict = {datetime.datetime.strftime(date, '%Y-%m-%d'): [] for date in dates}
+        for report in results[:-1]:
+            dateDict[datetime.datetime.strftime(report['served'], '%Y-%m-%d')].append(report)
+    return (dateDict, nextDate)
+
+def buildFormDict(formData, req):
+    '''Builds a dictionary containing the information from the new report
+    or update report form.'''
+    reportResults = {key: formData[key] 
+                    for key in ['name', 'meal', 'served', 'hall', 'notes']}
+    if 'CAS_USERNAME' in session:
+        reportResults['owner'] = session['CAS_USERNAME']
+    else:
+        reportResults['owner'] = None
+    
+    imagefile = req.files['image']
+    if imagefile:
+        reportResults['image'] = imagefile
+        uniqueID = (reportResults['name'] + reportResults['meal'] + 
+                    reportResults['served'] + reportResults['hall'])
+        fsize = os.fstat(imagefile.stream.fileno()).st_size
+        if fsize > app.config['MAX_CONTENT_LENGTH']:
+            flash('File too big.')
+            return None
+        mime_type = imghdr.what(imagefile)
+        if not mime_type or mime_type.lower() not in ['jpeg','gif','png']:
+            flash('Not recognized as JPEG, GIF or PNG: {}'.format(mime_type))
+            return None
+        filename = secure_filename('{}.{}'.format(uniqueID,mime_type))
+        reportResults['imagefile'] = filename
+    else:
+        reportResults['imagefile'] = None
+    
+    for labelType in ['listed-allergens', 'present-allergens', 'listed-diets', 'followed-diets']:
+        labels = formData.getlist(labelType)
+        if len(labels) == 0:
+            flash('At least one checkbox in each set must be checked.')
+            return None
+        if ('None' in labels or 'Unknown' in labels) and len(labels) > 1:
+            flash('None or Unknown must be the only checked option in the row.')
+            return None
+    reportResults['allergens'] = {'listed': formData.getlist('listed-allergens'), 
+                                'actual': formData.getlist('present-allergens')}
+
+    reportResults['diets'] = {'listed': formData.getlist('listed-diets'), 
+                            'actual': formData.getlist('followed-diets')}
+    return reportResults
+
+if __name__ == '__main__':
+    import sys, os
+
+    if len(sys.argv) > 1:
+        port=int(sys.argv[1])
+        if not(1943 <= port <= 1950):
+            print('For CAS, choose a port from 1943 to 1950')
+            sys.exit()
+    else:
+        print('CAS not enabled.')
+        port=os.getuid()
+    app.debug = True
+    app.run('0.0.0.0',port)
+====================== reports.py =====================
+import dbi
+
+def getConn(db):
+    '''Returns a database connection for that db'''
+    dsn = dbi.read_cnf()
+    conn = dbi.connect(dsn)
+    conn.select_db(db)
+    return conn
+
+def isDuplicate(curs, infoDict):
+    '''Returns true if the given report is a duplicate of one already in the
+    table, and false otherwise.'''
+    curs.execute('''SELECT id FROM report 
+                    WHERE name=%s 
+                    AND meal=%s
+                    AND served=%s
+                    AND hall=%s''',
+                    [infoDict['name'], infoDict['meal'], infoDict['served'],
+                    infoDict['hall']])
+    return curs.fetchone() != None
+
+def updateReport(conn, infoDict, reportID, changed):
+    '''Updates the report of the given reportID. infoDict contains the new values
+    for the report, and changed is a boolean that determines whether or not
+    any of the identifying information of the report has been changed (such
+    as the name, dining hall, or date served).'''
+    curs = dbi.cursor(conn)
+    # we don't want anyone else changing anything about this report while we're 
+    # changing it, and concurrent changes to other reports could affect whether 
+    # this update results in a duplicate entry or not
+    curs.execute('''LOCK TABLES report WRITE,label WRITE''')
+    if changed: # duplication is only possible if identifying information has changed
+        print('checking duplicate')
+        if isDuplicate(curs, infoDict):
+            curs.execute('''UNLOCK TABLES''') # don't forget to unlock
+            return False
+
+    curs.execute('''UPDATE report SET
+                    name=%s,meal=%s,served=%s,hall=%s,imagefile=%s,
+                    notes=%s,owner=%s
+                    WHERE id=%s''',
+                    [infoDict['name'], infoDict['meal'], 
+                    infoDict['served'], infoDict['hall'], infoDict['imagefile'], 
+                    infoDict['notes'], infoDict['owner'],
+                    reportID])
+
+    # delete and re-insert labels
+    curs.execute('''DELETE FROM label WHERE id=%s''', [reportID])
+    insertLabels(conn, infoDict['allergens'], reportID, 'allergen')
+    insertLabels(conn, infoDict['diets'], reportID, 'diet')
+
+    curs.execute('''UNLOCK TABLES''') # don't forget to unlock
+    return True
+
+def insertReport(conn, infoDict):
+    '''Inserts a report into the report table given a database connection
+    and a dictionary of values. Returns the unique ID of the just-inserted
+    report.'''
+    curs = dbi.cursor(conn)
+    curs.execute('''LOCK TABLES report WRITE,label WRITE''')
+    if isDuplicate(curs, infoDict):
+        curs.execute('''UNLOCK TABLES''')
+        return -1
+    else:
+        curs.execute('''
+            INSERT INTO report(name,meal,served,hall,imagefile,notes,owner)
+            VALUES(%s, %s, %s, %s, %s, %s, %s)
+            ''',
+            [infoDict['name'], infoDict['meal'], infoDict['served'],
+            infoDict['hall'], infoDict['imagefile'], infoDict['notes'], 
+            infoDict['owner']])
+        curs.execute('SELECT LAST_INSERT_ID()')
+        reportID = curs.fetchone()[0]
+        insertLabels(conn, infoDict['allergens'], reportID, 'allergen')
+        insertLabels(conn, infoDict['diets'], reportID, 'diet')
+        curs.execute('''UNLOCK TABLES''')
+        return reportID
+
+def insertLabels(conn, infoDict, reportID, kind):
+    '''Inserts the listed and present/followed allergens or diets (depending
+    on kind) given by the provided dictionary and associates them with the 
+    given ID. Kind can be one of "allergen" or "diet".'''
+    curs = dbi.cursor(conn)
+    for key in iter(infoDict):
+        for entry in infoDict[key]:
+            curs.execute('''
+                INSERT INTO label(id,code,labeled,kind)
+                VALUES(%s, %s, %s, %s)
+                ''', \
+                [reportID, entry, key, kind])
+
+def getReport(conn, reportID):
+    '''Returns the ID, name, date served, dining hall, mealtime, notes, and 
+    owner of the report specified by ID as a dictionary.'''
+    curs = dbi.dictCursor(conn)
+    curs.execute('''
+                SELECT name, served, hall, meal, notes, owner FROM report 
+                WHERE report.id = %s
+                ''', [reportID])
+    return curs.fetchone() # ids are unique
+
+def getLabels(conn, reportID):
+    '''Returns the labeled/actual allergens/diets for the given report as a 
+    list of dictionaries, where each dictionary represents an allergen/diet.'''
+    curs = dbi.dictCursor(conn)
+    curs.execute('''
+                SELECT code,kind,labeled FROM label
+                WHERE id = %s
+                ''', [reportID])
+    return curs.fetchall()
+
+def getImage(conn, reportID):
+    '''Returns the filename of the image associated with the specified report.'''
+    curs = dbi.dictCursor(conn)
+    curs.execute('''
+                SELECT imagefile FROM report
+                WHERE id = %s
+                ''', [reportID])
+    return curs.fetchone()
+
+def searchReports(conn, name, hall):
+    '''Returns a list of all reports matching the given search string anywhere
+    within their name. Hall refers to either the one dining hall being searched
+    or "All Dining Halls".'''
+    curs = dbi.dictCursor(conn)
+    if hall != "All Dining Halls": #specific dining hall
+        curs.execute('''
+                    SELECT id,name,served,meal,hall FROM report
+                    WHERE report.name like %s
+                    AND report.hall = %s''', \
+                    ["%" + name + "%", hall])
+    else:
+        curs.execute('''
+                    SELECT id,name,served,meal,hall FROM report
+                    WHERE report.name like %s''', \
+                    ["%" + name + "%"])
+    return curs.fetchall()
+
+def buildInfoDict(conn, reportID):
+    '''Gets the information about a report (specified by ID) from the database
+    and returns it as a dictionary, where the listed/actual allergens/diets
+    are represented as lists.'''
+    reportDict = getReport(conn,reportID)
+
+    labels = getLabels(conn, reportID)
+    reportDict['listedAllergens'] = []
+    reportDict['actualAllergens'] = []
+    reportDict['listedDiets'] = []
+    reportDict['actualDiets'] = []
+    for label in labels:
+        if label['labeled'] == 'listed':
+            if label['kind'] == 'allergen': # listed allergen
+                reportDict['listedAllergens'].append(label['code'])
+            else: # listed diet
+                reportDict['listedDiets'].append(label['code'])
+        else: # actual
+            if label['kind'] == 'allergen': # actual allergen
+                reportDict['actualAllergens'].append(label['code'])
+            else: # actual diet
+                reportDict['actualDiets'].append(label['code'])
+    print(reportDict)
+    return reportDict
+
+def getOwner(conn, reportID):
+    '''Returns the username of the report's creator.'''
+    curs = dbi.dictCursor(conn)
+    curs.execute('''
+                SELECT owner FROM report
+                WHERE id = %s
+                ''', [reportID])
+    return curs.fetchone()['owner']
+
+def deleteReport(conn, reportID):
+    '''Deletes the report given by reportID.'''
+    curs = dbi.dictCursor(conn)
+    curs.execute('''SELECT imagefile FROM report WHERE id=%s''',[reportID])
+    imagefile = curs.fetchone()['imagefile']
+    rows = curs.execute('''
+                        DELETE FROM report
+                        WHERE id = %s''', [reportID])
+    if rows != 1:
+        print("deleted " + str(rows) + " rows")
+        return None
+    else:
+        return imagefile
+
+def listReports(conn, startDate, numReports):
+    '''Returns a list of numReports existing reports from most recent to least recent
+    relative to startDate.'''
+    curs = dbi.dictCursor(conn)
+    curs.execute('''
+                SELECT id,name,served,meal,hall FROM report
+                WHERE served <= %s
+                ORDER BY served DESC, hall
+                LIMIT %s
+                ''',
+                [startDate, numReports])
+    return curs.fetchall()
+
+====================== all.sql =====================
+
+file create-tables.sql
+
+DROP TABLE IF EXISTS label;
+DROP TABLE IF EXISTS report;
+
+CREATE TABLE report (
+	id int auto_increment NOT NULL PRIMARY KEY,
+	name varchar(50) NOT NULL,
+	served date NOT NULL,
+	meal enum('Breakfast', 'Lunch', 'Dinner') NOT NULL,
+	hall enum('Bates', 'Tower', 'Stone Davis', 'Pomeroy', 'Bae Pow Lu Chow') NOT NULL,
+	notes varchar(300),
+	imagefile varchar(50),
+	owner varchar(8)
+) ENGINE = InnoDB;
+
+CREATE TABLE label (
+	id int NOT NULL,
+	code enum('W', 'M', 'E', 'S', 'P', 'TN', 'F', 'SF', 'VE', 'V', 'GS', 'H', 'None', 'Unknown') NOT NULL,
+    labeled enum('listed', 'actual') NOT NULL,
+	kind enum('allergen', 'diet') NOT NULL,
+	PRIMARY KEY (id, code, labeled, kind),
+	INDEX (id),
+	FOREIGN KEY (id) REFERENCES report(id)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+) ENGINE = InnoDB;
+================================================================
+
+
+====================== create-tables.sql =====================
+DROP TABLE IF EXISTS label;
+DROP TABLE IF EXISTS report;
+
+CREATE TABLE report (
+	id int auto_increment NOT NULL PRIMARY KEY,
+	name varchar(50) NOT NULL,
+	served date NOT NULL,
+	meal enum('Breakfast', 'Lunch', 'Dinner') NOT NULL,
+	hall enum('Bates', 'Tower', 'Stone Davis', 'Pomeroy', 'Bae Pow Lu Chow') NOT NULL,
+	notes varchar(300),
+	imagefile varchar(50),
+	owner varchar(8)
+) ENGINE = InnoDB;
+
+CREATE TABLE label (
+	id int NOT NULL,
+	code enum('W', 'M', 'E', 'S', 'P', 'TN', 'F', 'SF', 'VE', 'V', 'GS', 'H', 'None', 'Unknown') NOT NULL,
+    labeled enum('listed', 'actual') NOT NULL,
+	kind enum('allergen', 'diet') NOT NULL,
+	PRIMARY KEY (id, code, labeled, kind),
+	INDEX (id),
+	FOREIGN KEY (id) REFERENCES report(id)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+) ENGINE = InnoDB;
+====================== templates/base.html =====================
+<!doctype html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8'>
+    <meta name=author content="Emma Shumadine">
+    <title>Label Fresh | {{title}}</title>
+    <link rel="stylesheet"
+          href="{{url_for('static',filename='common-style.css')}}"
+          type="text/css">
+    {% block styles %}
+    <link rel="stylesheet"
+          href="{{url_for('static',filename='home-style.css')}}"
+          type="text/css">
+    {% endblock %}
+</head>
+<body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<div id="navbar">
+    <ul>
+        <li><a href="{{ url_for('homepage') }}">Home</a></li>
+        <li><a href="{{url_for('calendar')}}">Calendar</a></li>
+        <li><a href="{{ url_for('new_report') }}">Report a Label</a></li>
+        <li>
+            {% if username %}
+            <a href="/logout/">Logout {{username}}</a>
+            {% else %}
+            <a href="/login/">Wellesley Login</a></li>
+            {% endif %}
+        <li id="search">
+            <form method="GET" action="{{url_for('search')}}">
+                <label>
+                    Search <input type="text" name="query" required>
+                </label>
+                <label>
+                    Dining Hall 
+                    <select name="hall" required>
+                        <option selected>All Dining Halls</option>
+                        <option value="Bae Pow Lu Chow">Bae Pow Lu Chow (Lulu)</option>
+                        <option>Tower</option>
+                        <option>Bates</option>
+                        <option>Stone Davis</option>
+                        <option>Pomeroy</option>
+                    </select>
+                </label>
+                <input type="submit" value="search">
+            </form>
+        </li>
+    </ul>
+</div>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div id="messages">
+        {% for msg in messages %}
+            <p>{{msg}}</p>
+        {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div id="content">
+
+{% block content %}
+
+<h1>{{title}}</h1>
+
+<p>
+    <a href="http://www.wellesleyfresh.com/index.html">
+        Wellesley Fresh
+    </a> 
+    is really, really bad at labeling the food it 
+    serves. Labels are often missing, confusing, or incorrect. 
+    As someone with celiac disease, an autoimmune disorder which 
+    requires me to eat a gluten-free diet, I often have to decide 
+    whether I want to trust the labels at the dining halls or 
+    take the chance of getting sick, and the inconsistencies of 
+    the online menu mean that I can’t tell if a dining hall will 
+    have food for me before I get there. Label Fresh allows the 
+    community to report labelling errors as they are encountered, 
+    giving people with dietary restrictions more information
+    with which to base their decisions of where to eat on.
+</p>
+
+<p>Image here as example maybe?</p>
+
+<h2>How It Works</h2>
+<ul>
+    <li>
+        Click on <a href="{{url_for('calendar')}}">Calendar</a> to see a calendar view 
+        of all of the reports submitted so far.
+    </li>
+    <li>
+        Click on <a href="{{ url_for('new_report') }}">Report a Label</a> to report an 
+        incorrect or missing label.
+    </li>
+    <li>
+        Click Search at the top of the page to find all reports about a 
+        food's label at a specific dining hall or across all 
+        dining halls.
+    </li>
+</ul>
+
+<p>
+    Anyone can add or edit reports, but only the creator (logged 
+    in through the Wellesley login) can delete their own reports.
+</p>
+<p>
+    There is currently no integration with the 
+    <a href="http://www.wellesleyfresh.com/culinary-centers.html">
+        online menu
+    </a> 
+    for the dining halls.
+</p>
+
+{% endblock %}
+
+</div>
+
+<footer>
+    <ul id="iconlist">       
+        <li>
+            <a href="https://jigsaw.w3.org/css-validator/check/referer"><img 
+               style="border:0;width:88px;height:31px"
+               src="https://cs.wellesley.edu/~cs304/Icons/vcss.gif"
+               alt="Valid CSS!"></a>
+        </li>   
+        <li>
+            <a href="https://validator.w3.org/check?uri=referer"><img 
+               src="https://cs.wellesley.edu/~cs304/Icons/valid-html5v2.png"
+               alt="Valid HTML5"
+               title="Valid HTML5"
+               id="valid-html"></a> 
+        </li>      
+    </ul>
+</footer>
+
+{% block scripts %}
+{% endblock %}
+
+</body>
+</html>
+
+====================== templates/calendar.html =====================
+{% extends "base.html" %}
+
+{% block styles %}
+
+<link rel="stylesheet"
+      href="{{url_for('static',filename='calendar-style.css')}}"
+      type="text/css">
+
+{% endblock %}
+
+{% block content %}
+<p>This button turns on/off all the JavaScript:
+        <button id="progressive_enhancement">Turn On Progressive Enhancement</button></p>
+
+<h1>Existing Reports</h1>
+
+<ul id="dates">
+{% for date,items in dates|dictsort(reverse=true) %}
+    <li><h2>{{date}}</h2></li>
+    {% for item in items %}
+        <div class="calendar-item">
+            <h3><a href="{{url_for('view_report', reportID=item.id)}}">{{item.name}}</a></h3>
+            <table>
+                <tr>
+                    <th>Dining Hall</th>
+                    <th>Meal</th>
+                </tr>
+                <tr>
+                    <td>{{item.hall}}</td>
+                    <td>{{item.meal}}</td>
+                </tr>
+            </table>
+        </div>
+    {% endfor %}
+{% endfor %}
+</ul>
+
+{% if nextDate %}
+<form id="showMore" method="POST" action="{{url_for('showMore')}}">
+    <input id="next-date" type="hidden" name="next-date" value="{{nextDate}}"> 
+    <input id="show-submit" type="submit" name="show" value="SHOW MORE">
+</form>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    var progressive_on = false;
+
+    $("#progressive_enhancement").on('click', function () {
+        if(progressive_on) {
+            // turn it off
+            $("#progressive_enhancement").text('Turn on Progressive Enhancement');
+            progressive_on = false;
+        } else {
+            // turn it on
+            $("#progressive_enhancement").text('Turn off Progressive Enhancement');
+            progressive_on = true;
+        }
+    });
+
+    var AjaxURL = "{{url_for('showMoreAjax')}}";
+</script>
+
+<script src="{{url_for('static', filename='calendarAjax.js')}}"></script>
+
+{% endblock %}
+====================== templates/new_report.html =====================
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet"
+          href="{{url_for('static',filename='new-style.css')}}"
+          type="text/css">
+{% endblock %}
+
+{% block content %}
+
+<h1>{{title}}</h1>
+
+<div id="legend">
+    <figure class="legend" id="allergen">
+        <p><img src="{{url_for('static', filename='allergens.png')}}"
+            alt="P=Peanuts,TN=Tree Nuts,M=Milk,SF=Shellfish,W=Wheat,E=Eggs,S=Soy,F=Fish"></p>
+        <figcaption>Allergen symbols used on dining hall labels.</figcaption>
+    </figure>
+    <figure class="legend" id="diet">
+        <p><img src="{{url_for('static',filename='diets.png')}}"
+            alt="V=Vegetarian,VE=Vegan,GS=Gluten Sensitive,H=Halal"></p>
+        <figcaption>Diet symbols used on dining hall labels.</figcaption>
+    </figure>
+    
+</div>
+
+{% if info %}
+
+<form method="POST" action="" enctype="multipart/form-data">
+    <p><label>Date:
+        <input type="date" name="served" required value="{{info.served}}">
+    </label></p>
+    <p><label>Food name: 
+        <input name="name" required value="{{info.name}}">
+    </label></p>
+    <br>
+    <p><label>
+        Dining Hall:
+            <select name="hall" required>
+                <option value="">select</option>
+                <option value="Bae Pow Lu Chow" 
+                {% if info.hall == "Bae Pow Lu Chow" %} selected {% endif %}>
+                Bae Pow Lu Chow (Lulu)</option>
+                <option
+                {% if info.hall == "Tower" %} selected {% endif %}>
+                Tower</option>
+                <option
+                {% if info.hall == "Bates" %} selected {% endif %}>
+                Bates</option>
+                <option
+                {% if info.hall == "Stone Davis" %} selected {% endif %}>
+                Stone Davis</option>
+                <option
+                {% if info.hall == "Pomeroy" %} selected {% endif %}>
+                Pomeroy</option>
+        </select>
+    </label></p>
+    <p><label>
+        Mealtime:
+        <select name="meal" required>
+            <option value="">select</option>
+            <option
+            {% if info.meal == "Breakfast" %} selected {% endif %}>
+            Breakfast</option>
+            <option
+            {% if info.meal == "Lunch" %} selected {% endif %}>
+            Lunch</option>
+            <option
+            {% if info.meal == "Dinner" %} selected {% endif %}>
+            Dinner</option>
+        </select>
+    </label></p>
+    <fieldset><legend>Diets</legend>
+        <p>Listed Diets: <br>
+            <label><input type="checkbox" name="listed-diets" value="VE"
+                {% if "VE" in info.listedDiets %} checked {% endif %}>
+            Vegan</label>
+            <label><input type="checkbox" name="listed-diets" value="V"
+                {% if "V" in info.listedDiets %} checked {% endif %}>
+            Vegetarian</label>
+            <label><input type="checkbox" name="listed-diets" value="GS"
+                {% if "GS" in info.listedDiets %} checked {% endif %}>
+            Gluten Sensitive</label>
+            <label><input type="checkbox" name="listed-diets" value="H"
+                {% if "H" in info.listedDiets %} checked {% endif %}>
+            Halal</label>
+            <label><input type="checkbox" name="listed-diets" value="None"
+                {% if "None" in info.listedDiets %} checked {% endif %}>
+            None</label>
+        </p><br>
+        <p>Diets Followed: <br>
+            <label><input type="checkbox" name="followed-diets" value="VE"
+                {% if "VE" in info.actualDiets %} checked {% endif %}>
+            Vegan</label>
+            <label><input type="checkbox" name="followed-diets" value="V"
+                {% if "V" in info.actualDiets %} checked {% endif %}>
+            Vegetarian</label>
+            <label><input type="checkbox" name="followed-diets" value="GS"
+                {% if "GS" in info.actualDiets %} checked {% endif %}>
+            Gluten Sensitive</label>
+            <label><input type="checkbox" name="followed-diets" value="H"
+                {% if "H" in info.actualDiets %} checked {% endif %}>
+            Halal</label>
+            <label><input type="checkbox" name="followed-diets" value="None"
+                {% if "None" in info.actualDiets %} checked {% endif %}>
+            None</label>
+            <label><input type="checkbox" name="followed-diets" value="Unknown"
+                {% if "Unknown" in info.actualDiets %} checked {% endif %}>
+            Unknown</label>
+        </p>
+    </fieldset>
+    <fieldset><legend>Allergens</legend>
+        <p>Listed Allergens: <br>
+            <label><input type="checkbox" name="listed-allergens" value="W"
+                {% if "W" in info.listedAllergens %} checked {% endif %}>
+            Wheat</label>
+            <label><input type="checkbox" name="listed-allergens" value="M"
+                {% if "M" in info.listedAllergens %} checked {% endif %}>
+            Milk</label>
+            <label><input type="checkbox" name="listed-allergens" value="E"
+                {% if "E" in info.listedAllergens %} checked {% endif %}>
+            Eggs</label>
+            <label><input type="checkbox" name="listed-allergens" value="S"
+                {% if "S" in info.listedAllergens %} checked {% endif %}>
+            Soy</label>
+            <label><input type="checkbox" name="listed-allergens" value="P"
+                {% if "P" in info.listedAllergens %} checked {% endif %}>
+            Peanuts</label>
+            <label><input type="checkbox" name="listed-allergens" value="TN"
+                {% if "TN" in info.listedAllergens %} checked {% endif %}>
+            Tree Nuts</label>
+            <label><input type="checkbox" name="listed-allergens" value="F"
+                {% if "F" in info.listedAllergens %} checked {% endif %}>
+            Fish</label>
+            <label><input type="checkbox" name="listed-allergens" value="SF"
+                {% if "SF" in info.listedAllergens %} checked {% endif %}>
+            Shellfish</label>
+            <label><input type="checkbox" name="listed-allergens" value="None"
+                {% if "None" in info.listedAllergens %} checked {% endif %}>
+            None</label>
+        </label></p><br>
+        <p>Allergens Present: <br>
+            <label><input type="checkbox" name="present-allergens" value="W"
+                {% if "W" in info.actualAllergens %} checked {% endif %}>
+            Wheat</label>
+            <label><input type="checkbox" name="present-allergens" value="M"
+                {% if "M" in info.actualAllergens %} checked {% endif %}>
+            Milk</label>
+            <label><input type="checkbox" name="present-allergens" value="E"
+                {% if "E" in info.actualAllergens %} checked {% endif %}>
+            Eggs</label>
+            <label><input type="checkbox" name="present-allergens" value="S"
+                {% if "S" in info.actualAllergens %} checked {% endif %}>
+            Soy</label>
+            <label><input type="checkbox" name="present-allergens" value="P"
+                {% if "P" in info.actualAllergens %} checked {% endif %}>
+             Peanuts</label>
+            <label><input type="checkbox" name="present-allergens" value="TN"
+                {% if "TN" in info.actualAllergens %} checked {% endif %}>
+            Tree Nuts</label>
+            <label><input type="checkbox" name="present-allergens" value="F"
+                {% if "F" in info.actualAllergens %} checked {% endif %}>
+            Fish</label>
+            <label><input type="checkbox" name="present-allergens" value="SF"
+                {% if "SF" in info.actualAllergens %} checked {% endif %}>
+            Shellfish</label>
+            <label><input type="checkbox" name="present-allergens" value="None"
+                {% if "None" in info.actualAllergens %} checked {% endif %}>
+            None</label>
+            <label><input type="checkbox" name="present-allergens" value="Unknown"
+                {% if "Unknown" in info.actualAllergens %} checked {% endif %}>
+            Unknown</label>
+        </p>
+    </fieldset>
+    <p><label>
+        Upload a picture (replaces any previously uploaded image) <input type="file" name="image">
+    </label></p>
+    <br>
+    <p><label>
+        Notes <br>
+        <textarea name="notes" rows=3 cols=30 value="{{info.notes}}"></textarea>
+    </label></p>
+    <br>
+    <p><input type="submit" value="Submit"></p>
+</form>
+
+{% else %}
+
+<form method="POST" action="" enctype="multipart/form-data">
+    <p><label>Date: 
+        <input type="date" name="served" required>
+    </label></p>
+    <p><label>Food name: 
+        <input name="name" required>
+    </label></p>
+    <br>
+    <p><label>
+        Dining Hall:
+        <select name="hall" required>
+            <option value="">select</option>
+            <option value="Bae Pow Lu Chow">Bae Pow Lu Chow (Lulu)</option>
+            <option>Tower</option>
+            <option>Bates</option>
+            <option>Stone Davis</option>
+            <option>Pomeroy</option>
+        </select>
+    </label></p>
+    <p><label>
+        Mealtime:
+        <select name="meal" required>
+            <option value="">select</option>
+            <option>Breakfast</option>
+            <option>Lunch</option>
+            <option>Dinner</option>
+        </select>
+    </label></p>
+    <fieldset><legend>Diets</legend>
+        <p>Listed Diets: <br>
+            <label><input type="checkbox" name="listed-diets" value="VE">
+            Vegan</label>
+            <label><input type="checkbox" name="listed-diets" value="V">
+            Vegetarian</label>
+            <label><input type="checkbox" name="listed-diets" value="GS">
+            Gluten Sensitive</label>
+            <label><input type="checkbox" name="listed-diets" value="H">
+            Halal</label>
+            <label><input type="checkbox" name="listed-diets" value="None">
+            None</label>
+        </p><br>
+        <p>Diets Followed: <br>
+            <label><input type="checkbox" name="followed-diets" value="VE">
+            Vegan</label>
+            <label><input type="checkbox" name="followed-diets" value="V">
+            Vegetarian</label>
+            <label><input type="checkbox" name="followed-diets" value="GS">
+            Gluten Sensitive</label>
+            <label><input type="checkbox" name="followed-diets" value="H">
+            Halal</label>
+            <label><input type="checkbox" name="followed-diets" value="None">
+            None</label>
+            <label><input type="checkbox" name="followed-diets" value="Unknown">
+            Unknown</label>
+        </p>
+    </fieldset>
+    <fieldset><legend>Allergens</legend>
+        <p>Listed Allergens: <br>
+            <label><input type="checkbox" name="listed-allergens" value="W">
+            Wheat</label>
+            <label><input type="checkbox" name="listed-allergens" value="M">
+            Milk</label>
+            <label><input type="checkbox" name="listed-allergens" value="E">
+            Eggs</label>
+            <label><input type="checkbox" name="listed-allergens" value="S">
+            Soy</label>
+            <label><input type="checkbox" name="listed-allergens" value="P">
+            Peanuts</label>
+            <label><input type="checkbox" name="listed-allergens" value="TN">
+            Tree Nuts</label>
+            <label><input type="checkbox" name="listed-allergens" value="F">
+            Fish</label>
+            <label><input type="checkbox" name="listed-allergens" value="SF">
+            Shellfish</label>
+            <label><input type="checkbox" name="listed-allergens" value="None">
+            None</label>
+        </label></p><br>
+        <p>Allergens Present: <br>
+            <label><input type="checkbox" name="present-allergens" value="W">
+            Wheat</label>
+            <label><input type="checkbox" name="present-allergens" value="M">
+            Milk</label>
+            <label><input type="checkbox" name="present-allergens" value="E">
+            Eggs</label>
+            <label><input type="checkbox" name="present-allergens" value="S">
+            Soy</label>
+            <label><input type="checkbox" name="present-allergens" value="P">
+            Peanuts</label>
+            <label><input type="checkbox" name="present-allergens" value="TN">
+            Tree Nuts</label>
+            <label><input type="checkbox" name="present-allergens" value="F">
+            Fish</label>
+            <label><input type="checkbox" name="present-allergens" value="SF">
+            Shellfish</label>
+            <label><input type="checkbox" name="present-allergens" value="None">
+            None</label>
+            <label><input type="checkbox" name="present-allergens" value="Unknown">
+            Unknown</label>
+        </p>
+    </fieldset>
+    <p><label>
+        Upload a picture <input type="file" name="image">
+    </label></p>
+    <br>
+    <p><label>
+        Notes <br>
+        <textarea name="notes" rows=3 cols=30></textarea>
+    </label></p>
+    <br>
+    <p><input type="submit" value="Submit"></p>
+</form>
+
+{% endif %}
+
+{% endblock %}
+====================== templates/search.html =====================
+{% extends "base.html" %}
+
+{% block styles %}
+{% endblock %}
+
+{% block content %}
+
+<h1>Search Results</h1>
+<h2>Searching for {{query}} at {{hall}}</h2>
+<br>
+<p>{{numResults}} results</p>
+{% if results %}
+    {% for result in results %}
+    <div class="search-result">
+        <h3><a href="{{url_for('view_report', reportID=result.id)}}">{{result.name}}</a></h3>
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>Dining Hall</th>
+                <th>Meal</th>
+            </tr>
+            <tr>
+                <td>{{result.served}}</td>
+                <td>{{result.hall}}</td>
+                <td>{{result.meal}}</td>
+            </tr>
+        </table>
+    </div>
+    {% endfor %}
+{% endif %}
+
+{% endblock %}
+====================== templates/view_report.html =====================
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet"
+          href="{{url_for('static',filename='view-style.css')}}"
+          type="text/css">
+{% endblock %}
+
+{% block content %}
+
+{% if imagesource %}
+<img id="report-image" src={{url_for('static', filename=imagesource)}} alt="">
+{% endif %}
+
+<h1 class="header">{{info.name}}</h1>
+
+{% if owner %}
+<form class="header" method="POST" action="">
+    <input type="submit" name="delete" value="DELETE">
+    <input type="submit" name="update" value="UPDATE">
+</form>
+{% endif %}
+
+<p>Served on {{info.served}} for {{info.meal}} at {{info.hall}}.</p>
+
+<div id="label-info">
+    <table id="labels">
+        <tr>
+            <th>Listed Allergens</th>
+            <th>Allergens Present</th>
+        </tr>
+        <tr>
+            <td>
+                <ul>
+                    {% for allergen in info.listedAllergens %}
+                    <li>{{allergen}}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>
+                <ul>
+                    {% for allergen in info.actualAllergens %}
+                    <li>{{allergen}}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <th>Listed Diets</th>
+            <th>Diets Followed</th>
+        </tr>
+        <tr>
+            <td>
+                <ul>
+                    {% for diet in info.listedDiets %}
+                    <li>{{diet}}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>
+                <ul>
+                    {% for diet in info.actualDiets %}
+                    <li>{{diet}}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div id="notes">
+    <h2>Notes</h2>
+    <p>{% if info.notes|wordcount > 0 %}
+        {{info.notes}}
+        {% else %}
+        None
+    {% endif %}</p>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}
+====================== static/calendarAjax.js =====================
+/** 
+ * Takes in a list of the next reports to show, and modifies the DOM to
+ * add them.
+*/
+function showmore(info) {
+    var reports = info['reports'];
+    var nextDate = info['nextDate'];
+    for (var index in reports) {
+        date = Object.keys(reports[index])[0];
+
+        // create full elements to add for date
+        var dateList = document.createElement('li');
+        var dateHead = document.createElement('h2');
+        dateHead.innerHTML = date;
+        var dateHeader = dateList.appendChild(dateHead);
+
+        // add to date list
+        $("#dates").append(dateHeader);
+
+        for (var item in reports[index][date]) {
+            item = reports[index][date][item];
+
+            // create the full elements to add for report
+            var table = document.createElement('table');
+            var div = document.createElement('div');
+            div.setAttribute('class', 'calendar-item');
+            var headText = document.createElement('h3');
+            var link = document.createElement('a');
+            link.setAttribute('href', item['url']);
+            link.innerHTML = item['name'];
+            var row1 = document.createElement('tr');
+            var hallHead = document.createElement('th');
+            hallHead.innerHTML = 'Dining Hall';
+            var mealHead = document.createElement('th');
+            mealHead.innerHTML = 'Meal';
+            var row2 = document.createElement('tr');
+            var hall = document.createElement('td');
+            hall.innerHTML = item['hall'];
+            var meal = document.createElement('td');
+            meal.innerHTML = item['meal'];
+
+            // connect into structure
+            div.appendChild(headText);
+            headText.appendChild(link);
+            div.appendChild(table);
+            table.appendChild(row1);
+            row1.appendChild(hallHead);
+            row1.appendChild(mealHead);
+            table.appendChild(row2);
+            row2.appendChild(hall);
+            row2.appendChild(meal);
+
+            // add to DOM
+            $("#dates").append(div);
+        }
+    }
+    if (nextDate != null) {
+        // set next date
+        $("#next-date").val(nextDate);
+    } else {
+        // remove button to show more
+        $("#showMore").remove();
+    }
+}
+
+$("#showMore").submit(function(e) {
+    if (progressive_on) {
+        e.preventDefault();
+        var nextDate = $(this).closest("form").find("#next-date").val();
+        console.log(nextDate);
+        $.post(AjaxURL, {'next-date': nextDate}, showmore);
+    }
+});
+====================== static/calendar-style.css =====================
+#dates {
+    list-style-type: none;
+}
+====================== static/common-style.css =====================
+body {
+    font-family: sans-serif;
+}
+
+#navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #3c7700;
+}
+
+#navbar li:not(#search) {
+    float: left;
+    border-right: 1px solid white;
+}
+
+#navbar li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 18px 16px;
+    text-decoration: none;
+}
+
+#navbar li a:hover {
+    background-color: #458505;
+}
+
+#search form label {
+    color: white;
+    text-align: center;
+}
+
+#search form {
+    padding: 16px 16px; 
+}
+
+#search {
+    float: right;
+    width: 60%;
+    text-align: right;
+}
+
+#iconlist {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#iconlist li {
+    float: left;
+    padding: 20px 5px;
+}
+
+#messages {
+    font-size: 1.5em;
+    text-transform: uppercase;
+    color: #ff171d;
+}
+
+#content {
+    width: 97%;
+    margin: auto;
+}
+====================== static/home-style.css =====================
+h1 {
+    text-align: center;
+    font-size: 3em;
+}
+====================== static/new-style.css =====================
+.legend {
+    float: right;
+    width: 20%;
+    font-size: 0.9em;
+    font-style: italic;
+    text-align: center;
+}
+
+#legend {
+    margin-left: auto;
+    margin-right: 0;
+    clear: right;
+}
+
+#diet {
+    margin-top: 60px;
+}
+
+.legend img {
+    width: 80%;
+    margin: auto;
+}
+
+form p {
+    display: inline;
+    padding: 5px;
+    line-height: 2;
+}
+====================== static/view-style.css =====================
+#report-image {
+    width: 30%;
+    float: right;
+}

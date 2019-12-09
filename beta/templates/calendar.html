@@ -16,8 +16,10 @@
 
 <ul id="dates">
 {% for date,items in dates|dictsort(reverse=true) %}
-    <li><h2>{{date}}</h2></li>
+    <li><h2>{{date}}</h2>
+    <ul class="items">
     {% for item in items %}
+        <li>
         <div class="calendar-item">
             <h3><a href="{{url_for('view_report', reportID=item.id)}}">{{item.name}}</a></h3>
             <table>
@@ -31,7 +33,10 @@
                 </tr>
             </table>
         </div>
+        </li>
     {% endfor %}
+    </ul>
+    </li>
 {% endfor %}
 </ul>
 
