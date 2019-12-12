@@ -73,7 +73,7 @@ def view_report(reportID):
     username = None
     if 'CAS_USERNAME' in session:
         username = session['CAS_USERNAME']
-    owner = ((username != None) and (username==resports.getOwner(conn,reportID)))
+    owner = ((username != None) and (username==reports.getOwner(conn,reportID)))
 
     if request.method == 'GET':
         reportDict = reports.buildInfoDict(conn, reportID)
@@ -146,38 +146,38 @@ def update(reportID):
                                     title=reportDict['name'], 
                                     info=reportDict,
                                     username=username)
-    else:
-        if request.method == 'GET':
+    if request.method == 'GET':
+        return render_template('new_report.html',
+                                title='Update | ' + reportDict['name'],
+                                info=reportDict,
+                                username=username)
+    else: # form submitted
+        reportResults = buildFormDict(request.form, request)
+        
+        if not reportResults: # bad selection
             return render_template('new_report.html',
                                     title='Update | ' + reportDict['name'],
                                     info=reportDict,
                                     username=username)
-        else: # form submitted
-            reportResults = buildFormDict(request.form, request)
         
-            if not reportResults: # bad selection
-                return render_template('new_report.html',
-                                        title='Update | ' + reportDict['name'],
-                                        info=reportDict,
-                                        username=username)
-        
-            conn = reports.getConn("eshumadi_db")
-            changed = False
-            for key in ['name','served','meal','hall']:
-                if str(reportResults[key]) != str(reportDict[key]):
-                    changed = True
-            unique = reports.updateReport(conn, reportResults, reportID, changed)
-            if not unique: # submission failed due to duplicate entry
-                flash('report already exists')
-                return render_template('new_report.html', 
-                                        title='Update | ' + reportDict['name'],
-                                        info=reportDict,
-                                        username=username)
-            else:
+        conn = reports.getConn("eshumadi_db")
+        changed = False
+        for key in ['name','served','meal','hall']:
+            if str(reportResults[key]) != str(reportDict[key]):
+                changed = True
+        unique = reports.updateReport(conn, reportResults, reportID, changed)
+        if not unique: # submission failed due to duplicate entry
+            flash('report already exists')
+            return render_template('new_report.html', 
+                                    title='Update | ' + reportDict['name'],
+                                    info=reportDict,
+                                    username=username)
+        else:
+            if reportResults['imagefile']:
                 pathname = os.path.join(os.path.join('static',app.config['UPLOADS']),reportResults['imagefile'])
                 reportResults['image'].save(pathname)
-                flash('form submitted')
-                return redirect(url_for('view_report', reportID=reportID))
+            flash('form submitted')
+            return redirect(url_for('view_report', reportID=reportID))
         
 @app.route('/search/')
 def search():
@@ -204,7 +204,8 @@ def calendar():
 
     return render_template('calendar.html', title='View',
                                             dates=info[0],
-                                            nextDate=info[1])
+                                            nextDate=info[1],
+                                            username=username)
 
 @app.route('/show-more/', methods=['POST'])
 def showMore():
@@ -218,7 +219,8 @@ def showMore():
 
     return render_template('calendar.html', title='View',
                                             dates=info[0],
-                                            nextDate=info[1])
+                                            nextDate=info[1],
+                                            username=username)
 
 @app.route('/show-more-ajax/', methods=['POST'])
 def showMoreAjax():
