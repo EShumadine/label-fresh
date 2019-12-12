@@ -33,7 +33,7 @@
                 </label>
                 <label>
                     Dining Hall 
-                    <select name="hall" required>
+                    <select name="hall">
                         <option selected>All Dining Halls</option>
                         <option value="Bae Pow Lu Chow">Bae Pow Lu Chow (Lulu)</option>
                         <option>Tower</option>
@@ -81,7 +81,15 @@
     with which to base their decisions of where to eat on.
 </p>
 
-<p>Image here as example maybe?</p>
+<figure id="example">
+    <p><img src="{{url_for('static', filename='example.jpg')}}" 
+        alt="">
+    </p>
+    <figcaption>
+        A label for Hash Browns labelling them as both GS (made without gluten) 
+        and containing wheat, which is a contradiction.
+    </figcaption>
+</figure>
 
 <h2>How It Works</h2>
 <ul>

@@ -1,0 +1,18 @@
+.search-result th {
+    background-color: #3c7700;
+    color: white;
+}
+
+.search-result table {
+    width: 100%;
+    border: 1px solid black;
+    margin-top: -20px;
+}
+
+.search-result th, .search-result td {
+    width: 33%;
+}
+
+.search-result {
+    width: 30%;
+}

@@ -10,6 +10,8 @@
 
 <h1>{{title}}</h1>
 
+<p><em>Items marked with an asterisk (*) are required.</em></p>
+
 <div id="legend">
     <figure class="legend" id="allergen">
         <p><img src="{{url_for('static', filename='allergens.png')}}"
@@ -21,21 +23,20 @@
             alt="V=Vegetarian,VE=Vegan,GS=Gluten Sensitive,H=Halal"></p>
         <figcaption>Diet symbols used on dining hall labels.</figcaption>
     </figure>
-    
 </div>
 
 {% if info %}
 
-<form method="POST" action="" enctype="multipart/form-data">
-    <p><label>Date:
+<form id="new-report" method="POST" enctype="multipart/form-data">
+    <p><label>*Date:
         <input type="date" name="served" required value="{{info.served}}">
     </label></p>
-    <p><label>Food name: 
-        <input name="name" required value="{{info.name}}">
+    <p><label>*Food name: 
+        <input name="name" type="text" required value="{{info.name}}">
     </label></p>
     <br>
     <p><label>
-        Dining Hall:
+        *Dining Hall:
             <select name="hall" required>
                 <option value="">select</option>
                 <option value="Bae Pow Lu Chow" 
@@ -56,7 +57,7 @@
         </select>
     </label></p>
     <p><label>
-        Mealtime:
+        *Mealtime:
         <select name="meal" required>
             <option value="">select</option>
             <option
@@ -70,7 +71,7 @@
             Dinner</option>
         </select>
     </label></p>
-    <fieldset><legend>Diets</legend>
+    <fieldset><legend>*Diets</legend>
         <p>Listed Diets: <br>
             <label><input type="checkbox" name="listed-diets" value="VE"
                 {% if "VE" in info.listedDiets %} checked {% endif %}>
@@ -109,7 +110,7 @@
             Unknown</label>
         </p>
     </fieldset>
-    <fieldset><legend>Allergens</legend>
+    <fieldset><legend>*Allergens</legend>
         <p>Listed Allergens: <br>
             <label><input type="checkbox" name="listed-allergens" value="W"
                 {% if "W" in info.listedAllergens %} checked {% endif %}>
@@ -138,7 +139,7 @@
             <label><input type="checkbox" name="listed-allergens" value="None"
                 {% if "None" in info.listedAllergens %} checked {% endif %}>
             None</label>
-        </label></p><br>
+        </p><br>
         <p>Allergens Present: <br>
             <label><input type="checkbox" name="present-allergens" value="W"
                 {% if "W" in info.actualAllergens %} checked {% endif %}>
@@ -177,7 +178,7 @@
     </label></p>
     <br>
     <p><label>
-        Notes <br>
+        Notes (max. 300 characters) <br>
         <textarea name="notes" rows=3 cols=30 value="{{info.notes}}"></textarea>
     </label></p>
     <br>
@@ -186,16 +187,16 @@
 
 {% else %}
 
-<form method="POST" action="" enctype="multipart/form-data">
-    <p><label>Date: 
+<form id="new-report" method="POST" enctype="multipart/form-data">
+    <p><label>*Date: 
         <input type="date" name="served" required>
     </label></p>
-    <p><label>Food name: 
-        <input name="name" required>
+    <p><label>*Food name: 
+        <input name="name" type="text" required>
     </label></p>
     <br>
     <p><label>
-        Dining Hall:
+        *Dining Hall:
         <select name="hall" required>
             <option value="">select</option>
             <option value="Bae Pow Lu Chow">Bae Pow Lu Chow (Lulu)</option>
@@ -206,7 +207,7 @@
         </select>
     </label></p>
     <p><label>
-        Mealtime:
+        *Mealtime:
         <select name="meal" required>
             <option value="">select</option>
             <option>Breakfast</option>
@@ -214,7 +215,7 @@
             <option>Dinner</option>
         </select>
     </label></p>
-    <fieldset><legend>Diets</legend>
+    <fieldset><legend>*Diets</legend>
         <p>Listed Diets: <br>
             <label><input type="checkbox" name="listed-diets" value="VE">
             Vegan</label>
@@ -242,7 +243,7 @@
             Unknown</label>
         </p>
     </fieldset>
-    <fieldset><legend>Allergens</legend>
+    <fieldset><legend>*Allergens</legend>
         <p>Listed Allergens: <br>
             <label><input type="checkbox" name="listed-allergens" value="W">
             Wheat</label>
@@ -262,7 +263,7 @@
             Shellfish</label>
             <label><input type="checkbox" name="listed-allergens" value="None">
             None</label>
-        </label></p><br>
+        </p><br>
         <p>Allergens Present: <br>
             <label><input type="checkbox" name="present-allergens" value="W">
             Wheat</label>
@@ -291,7 +292,7 @@
     </label></p>
     <br>
     <p><label>
-        Notes <br>
+        Notes (max. 300 characters) <br>
         <textarea name="notes" rows=3 cols=30></textarea>
     </label></p>
     <br>

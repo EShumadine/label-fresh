@@ -28,4 +28,4 @@ I would like to have integration with the online menu, but it is run entirely in
   - [x] Wellesley login
   - [x] Ownership check for deletion and update
 * Beta version
-  - [ ] Make it look pretty (I have drawings)
+  - [x] Make it look (sort of) pretty (I tried, CSS is not my strong suit)

@@ -8,9 +8,18 @@
 
 {% block content %}
 
-{% if imagesource %}
-<img id="report-image" src={{url_for('static', filename=imagesource)}} alt="">
-{% endif %}
+<div id="legend">
+    <figure class="legend" id="allergen">
+        <p><img src="{{url_for('static', filename='allergens.png')}}"
+            alt="P=Peanuts,TN=Tree Nuts,M=Milk,SF=Shellfish,W=Wheat,E=Eggs,S=Soy,F=Fish"></p>
+        <figcaption>Allergen symbols used on dining hall labels.</figcaption>
+    </figure>
+    <figure class="legend" id="diet">
+        <p><img src="{{url_for('static',filename='diets.png')}}"
+            alt="V=Vegetarian,VE=Vegan,GS=Gluten Sensitive,H=Halal"></p>
+        <figcaption>Diet symbols used on dining hall labels.</figcaption>
+    </figure>
+</div>
 
 <h1 class="header">{{info.name}}</h1>
 
@@ -77,8 +86,20 @@
     {% endif %}</p>
 </div>
 
+{% if imagesource %}
+<img id="report-image" src={{url_for('static', filename=imagesource)}} alt="">
+{% endif %}
+
 {% endblock %}
 
 {% block scripts %}
+
+<script>
+    $("input[name=delete]").click(function (event) {
+        if (!(confirm("Are you sure you want to delete?"))) {
+            event.preventDefault();
+        }
+    });
+</script>
 
 {% endblock %}

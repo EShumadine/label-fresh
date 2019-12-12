@@ -21,8 +21,43 @@
     margin: auto;
 }
 
-form p {
+#new-report p {
     display: inline;
-    padding: 5px;
+    padding: 5px 10px;
     line-height: 2;
+}
+
+#new-report fieldset {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+#new-report input[type=text] {
+    padding: 4px 6px;
+    box-sizing: border-box;
+    border-radius: 3px;
+    border: 1px solid grey;
+}
+
+#new-report textarea {
+    padding: 4px 6px;
+    box-sizing: border-box;
+    border-radius: 5px;
+    background-color: #f8f8f8;
+    width: 80%;
+    height: 150px;
+}
+
+#new-report input[type=date] {
+    padding: 4px 6px;
+    box-sizing: border-box;
+    border-radius: 3px;
+    border: 1px solid grey;
+}
+
+#new-report select {
+    border: 1px solid grey;
+    border-radius: 4px;
+    background-color: #f1f1f1;
 }

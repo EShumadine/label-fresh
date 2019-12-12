@@ -158,7 +158,6 @@ def buildInfoDict(conn, reportID):
                 reportDict['actualAllergens'].append(label['code'])
             else: # actual diet
                 reportDict['actualDiets'].append(label['code'])
-    print(reportDict)
     return reportDict
 
 def getOwner(conn, reportID):

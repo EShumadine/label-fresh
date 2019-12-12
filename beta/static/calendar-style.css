@@ -1,3 +1,30 @@
 #dates {
     list-style-type: none;
 }
+
+.calendar-item th {
+    background-color: #3c7700;
+    color: white;
+}
+
+.calendar-item table {
+    width: 100%;
+    border: 1px solid black;
+    margin-top: -20px;
+}
+
+.calender-item th, .calendar-item td {
+    width: 50%;
+}
+
+.items {
+    list-style-type: none;
+}
+
+.calendar-item h3 {
+    text-align: center;
+}
+
+.calendar-item {
+    width: 30%;
+}

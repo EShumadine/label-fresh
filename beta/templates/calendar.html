@@ -10,7 +10,7 @@
 
 {% block content %}
 <p>This button turns on/off all the JavaScript:
-        <button id="progressive_enhancement">Turn On Progressive Enhancement</button></p>
+        <button id="progressive_enhancement">Turn off Progressive Enhancement</button></p>
 
 <h1>Existing Reports</h1>
 
@@ -52,7 +52,7 @@
 {% block scripts %}
 
 <script>
-    var progressive_on = false;
+    var progressive_on = true;
 
     $("#progressive_enhancement").on('click', function () {
         if(progressive_on) {

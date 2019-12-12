@@ -73,6 +73,7 @@ def view_report(reportID):
     username = None
     if 'CAS_USERNAME' in session:
         username = session['CAS_USERNAME']
+    owner = ((username != None) and (username==resports.getOwner(conn,reportID)))
 
     if request.method == 'GET':
         reportDict = reports.buildInfoDict(conn, reportID)
@@ -84,7 +85,7 @@ def view_report(reportID):
                                     title=reportDict['name'], 
                                     info=reportDict,
                                     username=username,
-                                    owner=(username==reports.getOwner(conn,reportID)))
+                                    owner=owner)
         else:
             pathname = os.path.join(app.config['UPLOADS'],imagefile['imagefile'])
             return render_template('view_report.html', 
@@ -92,7 +93,7 @@ def view_report(reportID):
                                     imagesource=pathname, 
                                     info=reportDict,
                                     username=username,
-                                    owner=(username==reports.getOwner(conn,reportID)))
+                                    owner=owner)
     else: # form submitted
         if 'delete' in request.form:
             if username:
@@ -102,7 +103,7 @@ def view_report(reportID):
                                             title=reportDict['name'], 
                                             info=reportDict,
                                             username=username,
-                                            owner=(username==reports.getOwner(conn,reportID)))
+                                            owner=owner)
             else:
                 err = reports.deleteReport(conn, reportID)
                 if not err:
@@ -112,7 +113,7 @@ def view_report(reportID):
                                             title=reportDict['name'], 
                                             info=reportDict,
                                             username=username,
-                                            owner=(username==reports.getOwner(conn,reportID)))
+                                            owner=owner)
                 else:
                     os.remove(os.path.join(os.path.join('static',app.config['UPLOADS']),err))
                     flash("Successfully deleted.")
@@ -229,7 +230,7 @@ def showMoreAjax():
     
     info = listSome(nextDate, 10)
 
-    infoList = [{date: dateList} for date, dateList in info[0].items()] # preserve sorting
+    infoList = [{date: dateList} for date, dateList in sorted(info[0].items(), reverse=True)] # preserve sorting
     for dateList in info[0].values():
         for report in dateList: # add URLs
             report['url'] = url_for('view_report', reportID=report['id'])
@@ -251,10 +252,14 @@ def listSome(startDate, numReports):
             dateDict[datetime.datetime.strftime(report['served'], '%Y-%m-%d')].append(report)
     else:
         dates = set([report['served'] for report in results[:-1]])
-        nextDate = (min(dates) - datetime.timedelta(days=1))
+        if results[-1]['served'] in dates: # we don't want to display partial results for any dates
+            dates = dates.difference([results[-1]['served']])
         dateDict = {datetime.datetime.strftime(date, '%Y-%m-%d'): [] for date in dates}
+        nextDate = (min(dates) - datetime.timedelta(days=1))
         for report in results[:-1]:
-            dateDict[datetime.datetime.strftime(report['served'], '%Y-%m-%d')].append(report)
+            date = datetime.datetime.strftime(report['served'], '%Y-%m-%d')
+            if date in dateDict:
+                dateDict[date].append(report)
     return (dateDict, nextDate)
 
 def buildFormDict(formData, req):
